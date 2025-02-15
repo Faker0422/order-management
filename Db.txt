@@ -11,7 +11,7 @@ import com.genckart.repository.OrderItemRepository;
 import com.genckart.repository.OrderRepository;
 import com.genckart.service.OrderService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
@@ -23,21 +23,27 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
-
     private final OrderItemRepository orderItemRepository;
-
     private final OrderHistoryRepository orderHistoryRepository;
-
     private final UserClient userClient;
-
     private final ProductClient productClient;
-
     private final CartClient cartClient;
 
     @Override
     public OrderDTO placeOrderFromCart(Integer userId) {
-        UserDTO user = userClient.getUserById(userId);
-        CartDTO cart = cartClient.getCartByUserId(userId);
+        // Extract UserDTO from ResponseEntity
+        ResponseEntity<UserDTO> userResponse = userClient.getUserById(userId);
+        if (!userResponse.hasBody()) {
+            throw new OrderNotFoundException("User not found for ID: " + userId);
+        }
+        UserDTO user = userResponse.getBody();
+
+        // Extract CartDTO from ResponseEntity
+        ResponseEntity<CartDTO> cartResponse = cartClient.getCartByUserId(userId);
+        if (!cartResponse.hasBody()) {
+            throw new OrderNotFoundException("Cart not found for user ID: " + userId);
+        }
+        CartDTO cart = cartResponse.getBody();
 
         Order order = new Order();
         order.setUserId(userId);
@@ -51,15 +57,13 @@ public class OrderServiceImpl implements OrderService {
                     orderItem.setOrder(order);
                     orderItem.setProductId(item.getProductId());
                     orderItem.setQuantity(item.getQuantity());
-
                     return orderItem;
                 }).collect(Collectors.toList());
 
         Order savedOrder = orderRepository.save(order);
-        orderItems.forEach(item -> item.setOrder(savedOrder)); // Set saved order for items
+        orderItems.forEach(item -> item.setOrder(savedOrder));
         orderItemRepository.saveAll(orderItems);
 
-        // Save order history
         OrderHistory orderHistory = new OrderHistory();
         orderHistory.setOrder(savedOrder);
         orderHistory.setUserId(userId);
@@ -70,11 +74,22 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public OrderDTO placeOrderFromProductDetail(Integer userId, Integer productId, Integer quantity) {
-        UserDTO user = userClient.getUserById(userId);
-        ProductDTO product = productClient.getProductById(productId);
+        // Extract UserDTO from ResponseEntity
+        ResponseEntity<UserDTO> userResponse = userClient.getUserById(userId);
+        if (!userResponse.hasBody()) {
+            throw new OrderNotFoundException("User not found for ID: " + userId);
+        }
+        UserDTO user = userResponse.getBody();
+
+        // Extract ProductDTO from ResponseEntity
+        ResponseEntity<ProductDTO> productResponse = productClient.getProductById(productId);
+        if (!productResponse.hasBody()) {
+            throw new OrderNotFoundException("Product not found for ID: " + productId);
+        }
+        ProductDTO product = productResponse.getBody();
 
         double productPrice = product.getNewPrice();
-        double discountPercentage = product.getDiscount(); // Discount stored in percentage
+        double discountPercentage = product.getDiscount();
         double discountedPrice = productPrice - (productPrice * discountPercentage / 100);
         double finalPrice = discountedPrice * quantity;
 
@@ -102,14 +117,6 @@ public class OrderServiceImpl implements OrderService {
         return convertToDTO(savedOrder);
     }
 
-    public List<OrderDTO> getOrderHistory(Integer userId) {
-        List<Order> orders = orderRepository.findByUserId(userId);
-        if (orders.isEmpty()) {
-            throw new OrderNotFoundException("No orders found for user ID: " + userId);
-        }
-        return orders.stream().map(this::convertToDTO).collect(Collectors.toList());
-    }
-
     public OrderDTO getOrderDetails(Integer orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
@@ -133,7 +140,6 @@ public class OrderServiceImpl implements OrderService {
         if (!orderRepository.existsById(orderId)) {
             throw new OrderNotFoundException("Order not found with ID: " + orderId);
         }
-
         orderItemRepository.deleteByOrder_OrderId(orderId);
         orderHistoryRepository.deleteByOrder_OrderId(orderId);
         orderRepository.deleteById(orderId);
@@ -153,18 +159,23 @@ public class OrderServiceImpl implements OrderService {
 
     private OrderItemDTO convertToOrderItemDTO(OrderItem orderItem) {
         OrderItemDTO orderItemDTO = new OrderItemDTO();
-
         orderItemDTO.setOrderItemId(orderItem.getOrderItemId());
         orderItemDTO.setProductId(orderItem.getProductId());
         orderItemDTO.setQuantity(orderItem.getQuantity());
 
-
-        ProductDTO product=productClient.getProductById(orderItem.getProductId());
-        if(product!=null){
+        // Extract ProductDTO from ResponseEntity
+        ResponseEntity<ProductDTO> productResponse = productClient.getProductById(orderItem.getProductId());
+        if (productResponse.hasBody()) {
+            ProductDTO product = productResponse.getBody();
             orderItemDTO.setProductName(product.getName());
             orderItemDTO.setPrice(product.getOldPrice());
             orderItemDTO.setDiscount(product.getDiscount());
             orderItemDTO.setFinalPrice(product.getNewPrice());
+        } else {
+            orderItemDTO.setProductName("Unknown Product");
+            orderItemDTO.setPrice(0.0);
+            orderItemDTO.setDiscount(0.0);
+            orderItemDTO.setFinalPrice(0.0);
         }
         return orderItemDTO;
     }
@@ -173,55 +184,10 @@ public class OrderServiceImpl implements OrderService {
         OrderHistoryDTO orderHistoryDTO = new OrderHistoryDTO();
         orderHistoryDTO.setOrderHistoryId(orderHistory.getOrderHistoryId());
         orderHistoryDTO.setOrderId(orderHistory.getOrder().getOrderId());
-        if(orderHistory.getOrder()!=null){
-            orderHistoryDTO.setOrderId(orderHistory.getOrder().getOrderId());
-        }
         orderHistoryDTO.setUserId(orderHistory.getUserId());
         orderHistoryDTO.setOrderStatus(orderHistory.getOrderStatus());
         return orderHistoryDTO;
     }
-}
-
-package com.genckart.clients;
-
-import com.genckart.dto.CartDTO;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-
-@FeignClient(name = "cart-service", url = "http://localhost:8083/cart")
-public interface CartClient {
-    @GetMapping("/user/{userId}")
-    ResponseEntity<CartDTO> getCartByUserId(@PathVariable Integer userId);
-}
-
-package com.genckart.clients;
-
-import com.genckart.dto.ProductDTO;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-
-@FeignClient(name = "product-service", url = "http://localhost:8081/api/products")
-public interface ProductClient {
-    @GetMapping("/{id}")
-    ResponseEntity<ProductDTO> getProductById(@PathVariable Integer id);
-}
-
-package com.genckart.clients;
-
-import com.genckart.dto.UserDTO;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-
-@FeignClient(name = "user-service", url = "http://localhost:8082/user")
-public interface UserClient {
-    @GetMapping("/profile/{id}")
-    ResponseEntity<UserDTO> getUserById(@PathVariable Integer id);
 }
 
 
