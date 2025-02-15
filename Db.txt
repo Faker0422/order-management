@@ -311,3 +311,106 @@ INSERT INTO address (user_id, street, city, state, postal_code, country) VALUES
 (19, '1616 Sycamore St', 'Sivaganga', 'TN', '600019', 'India'),
 (20, '1717 Magnolia St', 'Tiruvannamalai', 'TN', '600020', 'India');
 
+
+BACKEND: Order Management
+
+Acceptance Criteria
+
+
+AC 1: Place Order API (POST /orders)
+
+GIVEN valid order details and a user ID, WHEN a user places an order, THEN the order details are saved securely in the database, and a confirmation response is returned.
+
+AC 2: View Order History API (GET /orders/history)
+
+GIVEN a valid user ID, WHEN a request is made to view the order history, THEN the API returns a list of past orders, including order date, total amount, and order status.
+
+AC 3:  View Order Details API (GET /orders/{orderId})
+
+GIVEN a valid order ID, WHEN a request is made to view the order details, THEN the API returns detailed information about the order, including product names, quantities, prices, delivery address, and order status.
+
+Description
+
+As an End Customer,
+I want to place an order,
+So that I can buy the selected products.
+
+In Scope:
+
+Actors: End Customer
+
+Product: Order placement, order history, and order details
+
+Events: Placing an order, viewing order history, viewing order details
+
+Out of Scope:
+
+Actors: Admins, Sellers
+
+Product: Backend data management or updates
+
+Background: Customers can place orders for selected products, view their order history, and see detailed information about their orders. This enhances their shopping experience by providing a seamless and informative order management system.
+
+Requirements:
+
+Place Order:
+
+Allow users to place an order from the cart or product detail page.
+
+Save order details securely in the database.
+
+View Order History:
+
+Retrieve and display the user's order history.
+
+Ensure the order history is user-specific and stored securely.
+
+View Order Details:
+
+Retrieve and display detailed information about a specific order.
+
+Ensure the order details are user-specific and stored securely.
+
+Backend Implementation:
+
+Tech Stack: Spring Boot, MySQL, Spring Data JPA, Redis (for caching)
+
+Tables Involved:
+
+orders: Stores the details of each order placed by users.
+
+order_items: Stores the items included in each order.
+
+order_history: Stores the history of orders for each user.
+
+Exception Handling:
+
+OrderNotFoundException: Thrown when no order is found for a given order ID.
+
+OrderHistoryNotFoundException: Thrown when no order history is found for a user.
+
+Tasks:
+
+Place Order API (POST /orders)
+
+Description: Saves an order when the user places it.
+
+Input: Order details, User ID
+
+Output: Confirmation of order placement
+
+View Order History API (GET /orders/history)
+
+Description: Retrieves the user's order history.
+
+Input: User ID
+
+Output: List of past orders
+
+View Order Details API (GET /orders/{orderId})
+
+Description: Retrieves detailed information about a specific order.
+
+Input: Order ID
+
+Output: Detailed order information
