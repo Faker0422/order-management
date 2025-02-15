@@ -415,352 +415,2258 @@ Input: Order ID
 
 Output: Detailed order information
 
+cart microservice:
+
+package com.genckart.Client;
+
+import com.genckart.dto.ProductDto;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@FeignClient(name = "Product-Service", url = "http://localhost:8081/products")
+public interface ProductClient {
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductDto> getProductById(@PathVariable Integer id);
+}
+
+
+
+package com.genckart.Client;
+
+import com.genckart.dto.UserDto;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@FeignClient(name = "User-Profile-Management-Service", url = "http://localhost:8082/user")
+public interface UserClient {
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<UserDto> getUserById(@PathVariable Integer id);
+
+}
+
+
+package com.genckart.Controller;
+
+import com.genckart.Service.CartService;
+import com.genckart.dto.CartDto;
+import com.genckart.dto.CartItemDto;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping("/cart")
+@RequiredArgsConstructor
+public class CartController {
+
+    private final CartService cartService;
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<CartDto>> getCartByUserId(@PathVariable Integer userId) {
+        List<CartDto> cart = cartService.getCartByUserId(userId);
+        return new ResponseEntity<>(cart, HttpStatus.OK);
+    }
+
+    @PostMapping("/add")
+    public ResponseEntity<CartItemDto> addItemToCart(@RequestBody CartItemDto cartItemDto) {
+        CartItemDto addedItem = cartService.addItemToCart(cartItemDto);
+        return new ResponseEntity<>(addedItem, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/update/{userId}")
+    public ResponseEntity<CartItemDto> updateItemToCart(@PathVariable Integer userId, @RequestBody CartItemDto cartItemDto) {
+        CartItemDto updatedItem = cartService.updateItemToCart(userId, cartItemDto);
+        return new ResponseEntity<>(updatedItem, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/delete/{userId}/{cartItemId}")
+    public ResponseEntity<Void> deleteCartItemById(@PathVariable Integer userId, @PathVariable Integer cartItemId) {
+        cartService.deleteCartItemById(userId, cartItemId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @DeleteMapping("/clear/{userId}")
+    public ResponseEntity<Void> clearCart(@PathVariable Integer userId) {
+        cartService.clearCart(userId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping("/isEmpty/{userId}")
+    public ResponseEntity<Boolean> isCartEmpty(@PathVariable Integer userId) {
+        boolean isEmpty = cartService.isCartEmpty(userId);
+        return new ResponseEntity<>(isEmpty, HttpStatus.OK);
+    }
+
+    @GetMapping("/cart-items/{cartId}")
+    public ResponseEntity<List<CartItemDto>> getCartItemsByCartId(@PathVariable Integer cartId) {
+        List<CartItemDto> cartItems = cartService.getCartItemsByCartId(cartId);
+        return ResponseEntity.ok(cartItems);
+    }
+}
+
+
+package com.genckart.dto;
+
+import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Data
+public class CartDto {
+
+    private Integer cartId;
+    private int userId;
+    private int productId;
+    private int quantity;
+    private LocalDateTime addedAt;
+    private String userName;
+    private List<CartItemDto> cartItems;
+}
+package com.genckart.dto;
+
+import lombok.Data;
+
+@Data
+public class CartItemDto {
+
+    private Integer cartItemId;
+    private Integer userId;
+    private Integer productId;
+    private Integer quantity;
+    private String productName;
+    private Double productPrice;
+}
+
+package com.genckart.dto;
+
+import lombok.Data;
+
+@Data
+public class ProductDto {
+    private Integer productId;
+    private String name;
+    private double newPrice;
+    private int quantity;
+    private String brand;
+    private String color;
+    private String description;
+    private String image1;
+    private double highlightShippingFee;
+}
+
+package com.genckart.dto;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserDto {
+
+    private Integer userId;
+
+    @NotBlank(message = "Name is mandatory")
+    @Size(min = 2, max = 255, message = "Name must be between 2 and 255 characters")
+    private String name;
+
+    @Email(message = "Email should be valid")
+    @NotBlank(message = "Email is mandatory")
+    private String email;
+
+    @NotBlank(message = "Phone number is mandatory")
+    @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Phone number is invalid")
+    private String phoneNumber;
+
+    @NotBlank(message = "Password is mandatory")
+    @Size(min = 8, message = "Password must be at least 8 characters long")
+    private String passwordHash;
+
+    private String role;
+}
+
+
+package com.genckart.Entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "Cart")
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+public class Cart {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer cartId;
+
+    @Column(nullable = false)
+    private int userId;
+
+    @Column(nullable = false)
+    private int productId;
+
+    @Column(nullable = false)
+    private int quantity;
+
+    @Column(nullable = false, updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime addedAt;
+
+}
+package com.genckart.Entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "cart_items")
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+public class CartItem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer cartItemId;
+
+    @ManyToOne
+    @JoinColumn(name = "cart_id", nullable = false)
+    private Cart cart;
+
+    @Column(nullable = false)
+    private Integer userId;
+
+    @Column(nullable = false)
+    private int productId;
+
+    @Column(nullable = false)
+    private int quantity;
+
+    @Column(nullable = false)
+    private String productName;
+
+    @Column(nullable = false)
+    private Double productPrice;
+}
+package com.genckart.Repository;
+
+import com.genckart.Entity.CartItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface CartItemRepository extends JpaRepository<CartItem, Integer> {
+    List<CartItem> findByUserId(Integer userId);
+    List<CartItem> findByUserIdAndProductId(Integer userId, Integer productId);
+    CartItem findByUserIdAndCartItemId(Integer userId, Integer cartItemId);
+    List<CartItem> findByCart_CartId(Integer cartId);
+}
+package com.genckart.Repository;
+
+import com.genckart.Entity.Cart;
+import com.genckart.Entity.CartItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface CartRepository extends JpaRepository<Cart, Integer> {
+    Optional<Object> findByUserId(Integer userId);
+}
+
+package com.genckart.Service;
+
+import com.genckart.dto.CartDto;
+import com.genckart.dto.CartItemDto;
+
+import java.util.List;
+
+public interface CartService {
+    List<CartDto> getCartByUserId(Integer userId);
+    CartItemDto addItemToCart(CartItemDto cartItemDto);
+    CartItemDto updateItemToCart(Integer userId, CartItemDto cartItemDto);
+    void deleteCartItemById(Integer userId, Integer cartItemId);
+    void clearCart(Integer userId);
+    boolean isCartEmpty(Integer userId);
+    List<CartItemDto> getCartItemsByCartId(Integer cartId);
+}
+
+package com.genckart.Service.ServiceImpl;
+
+import com.genckart.Client.ProductClient;
+import com.genckart.Client.UserClient;
+import com.genckart.Entity.Cart;
+import com.genckart.Entity.CartItem;
+import com.genckart.Repository.CartItemRepository;
+import com.genckart.Repository.CartRepository;
+import com.genckart.Service.CartService;
+import com.genckart.dto.CartDto;
+import com.genckart.dto.CartItemDto;
+import com.genckart.dto.ProductDto;
+import com.genckart.dto.UserDto;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class CartServiceImpl implements CartService {
+
+    private final CartRepository cartRepository;
+    private final CartItemRepository cartItemRepository;
+    private final ProductClient productServiceClient;
+    private final UserClient userServiceClient;
+
+    @Override
+    public List<CartDto> getCartByUserId(Integer userId) {
+        try {
+            // Fetch user details
+            ResponseEntity<UserDto> userResponse = userServiceClient.getUserById(userId);
+            UserDto user = userResponse.getBody();
+            if (user == null) {
+                throw new RuntimeException("User not found");
+            }
+
+            // Fetch cart items for the user
+            List<CartItemDto> cartItems = cartItemRepository.findByUserId(userId).stream()
+                    .map(cartItem -> {
+                        try {
+                            // Fetch product details for each cart item
+                            ResponseEntity<ProductDto> productResponse = productServiceClient.getProductById(cartItem.getProductId());
+                            ProductDto product = productResponse.getBody();
+                            if (product == null) {
+                                throw new RuntimeException("Product not found");
+                            }
+                            CartItemDto cartItemDto = new CartItemDto();
+                            cartItemDto.setCartItemId(cartItem.getCartItemId());
+                            cartItemDto.setProductId(cartItem.getProductId());
+                            cartItemDto.setQuantity(cartItem.getQuantity());
+                            cartItemDto.setProductName(product.getName());
+                            cartItemDto.setProductPrice(product.getNewPrice());
+                            return cartItemDto;
+                        } catch (HttpClientErrorException.NotFound e) {
+                            throw new RuntimeException("Product not found with id: " + cartItem.getProductId());
+                        }
+                    })
+                    .collect(Collectors.toList());
+
+            // Create and return CartDto
+            CartDto cartDto = new CartDto();
+            cartDto.setUserId(userId);
+            cartDto.setUserName(user.getName());
+            cartDto.setCartItems(cartItems);
+            return List.of(cartDto);
+        } catch (HttpClientErrorException e) {
+            throw new RuntimeException("Error fetching user or product details", e);
+        }
+    }
+
+    @Override
+    public CartItemDto addItemToCart(CartItemDto cartItemDto) {
+        try {
+            // Fetch the cart for the user
+            Cart cart = (Cart) cartRepository.findByUserId(cartItemDto.getUserId())
+                    .orElseThrow(() -> new RuntimeException("Cart not found for user"));
+
+            // Convert DTO to entity
+            CartItem cartItem = new CartItem();
+            cartItem.setCart(cart); // Set the cart reference
+            cartItem.setUserId(cartItemDto.getUserId());
+            cartItem.setProductId(cartItemDto.getProductId());
+            cartItem.setQuantity(cartItemDto.getQuantity());
+            cartItem.setProductName(cartItemDto.getProductName());
+            cartItem.setProductPrice(cartItemDto.getProductPrice());
+
+            // Save cart item
+            CartItem savedCartItem = cartItemRepository.save(cartItem);
+
+            // Convert entity back to DTO
+            cartItemDto.setCartItemId(savedCartItem.getCartItemId());
+            return cartItemDto;
+        } catch (Exception e) {
+            throw new RuntimeException("Error adding item to cart", e);
+        }
+    }
+
+    @Override
+    public CartItemDto updateItemToCart(Integer userId, CartItemDto cartItemDto) {
+        try {
+            // Find existing cart items by userId and productId
+            List<CartItem> existingCartItems = cartItemRepository.findByUserIdAndProductId(userId, cartItemDto.getProductId());
+
+            if (existingCartItems.isEmpty()) {
+                throw new RuntimeException("Cart item not found");
+            }
+
+            // Update the first cart item found (or handle multiple items as needed)
+            CartItem existingCartItem = existingCartItems.get(0);
+            existingCartItem.setQuantity(cartItemDto.getQuantity());
+
+            // Save updated cart item
+            CartItem updatedCartItem = cartItemRepository.save(existingCartItem);
+
+            // Convert entity back to DTO
+            cartItemDto.setCartItemId(updatedCartItem.getCartItemId());
+            cartItemDto.setUserId(updatedCartItem.getUserId());
+            cartItemDto.setProductId(updatedCartItem.getProductId());
+            cartItemDto.setQuantity(updatedCartItem.getQuantity());
+
+            return cartItemDto;
+        } catch (Exception e) {
+            throw new RuntimeException("Error updating item in cart", e);
+        }
+    }
+
+    @Override
+    public void deleteCartItemById(Integer userId, Integer cartItemId) {
+        try {
+            CartItem cartItem = cartItemRepository.findByUserIdAndCartItemId(userId, cartItemId);
+            if (cartItem == null) {
+                throw new RuntimeException("Cart item not found");
+            }
+            cartItemRepository.delete(cartItem);
+        } catch (Exception e) {
+            throw new RuntimeException("Error deleting cart item", e);
+        }
+    }
+
+    @Override
+    public void clearCart(Integer userId) {
+        try {
+            List<CartItem> cartItems = cartItemRepository.findByUserId(userId);
+            cartItemRepository.deleteAll(cartItems);
+        } catch (Exception e) {
+            throw new RuntimeException("Error clearing cart", e);
+        }
+    }
+
+    @Override
+    public boolean isCartEmpty(Integer userId) {
+        try {
+            return cartItemRepository.findByUserId(userId).isEmpty();
+        } catch (Exception e) {
+            throw new RuntimeException("Error checking if cart is empty", e);
+        }
+    }
+
+    public List<CartItemDto> getCartItemsByCartId(Integer cartId) {
+        try {
+            List<CartItem> cartItems = cartItemRepository.findByCart_CartId(cartId);
+            return cartItems.stream()
+                    .map(cartItem -> {
+                        ResponseEntity<ProductDto> productResponse = productServiceClient.getProductById(cartItem.getProductId());
+                        ProductDto product = productResponse.getBody();
+                        if (product == null) {
+                            throw new RuntimeException("Product not found");
+                        }
+                        CartItemDto cartItemDto = new CartItemDto();
+                        cartItemDto.setCartItemId(cartItem.getCartItemId());
+                        cartItemDto.setProductId(cartItem.getProductId());
+                        cartItemDto.setQuantity(cartItem.getQuantity());
+                        cartItemDto.setProductName(product.getName());
+                        cartItemDto.setProductPrice(product.getNewPrice());
+                        return cartItemDto;
+                    })
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Error fetching cart items by cart ID", e);
+        }
+    }
+}
+package com.genckart;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+
+@SpringBootApplication
+@EnableFeignClients
+public class CartServiceApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(CartServiceApplication.class, args);
+	}
+
+}
+
+product microservice:
+
+
+package com.genckart.clients;
+import com.genckart.dto.UserDTO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@FeignClient(name = "User-Profile-Management-Service", url = "http://localhost:8080/user")
+public interface UserClient {
+
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Integer id);
+}
+
+package com.genckart.controller;
+
+import com.genckart.dto.CategoryDTO;
+import com.genckart.service.CategoryService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/products/categories")
+public class CategoryController {
+
+    @Autowired
+    private CategoryService categoryService;
+
+    @GetMapping
+    public ResponseEntity<List<CategoryDTO>> getAllCategories() {
+        List<CategoryDTO> categories = categoryService.getAllCategories();
+        return ResponseEntity.ok(categories);
+    }
+
+    @PostMapping
+    public ResponseEntity<CategoryDTO> createCategory(@RequestBody CategoryDTO categoryDTO) {
+        CategoryDTO savedCategory = categoryService.createCategory(categoryDTO);
+        return ResponseEntity.ok(savedCategory);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Integer id, @RequestBody CategoryDTO categoryDTO) {
+        CategoryDTO updatedCategory = categoryService.updateCategory(id, categoryDTO);
+        return ResponseEntity.ok(updatedCategory);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCategory(@PathVariable Integer id) {
+        categoryService.deleteCategory(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CategoryDTO> getByCategoryId(@PathVariable Integer id) {
+        CategoryDTO category = categoryService.getByCategoryId(id);
+        return ResponseEntity.ok(category);
+    }
+    @GetMapping("/name/{name}")
+    public ResponseEntity<CategoryDTO> getByCategoryName(@PathVariable String name) {
+        CategoryDTO category = categoryService.getByCategoryName(name);
+        return ResponseEntity.ok(category);
+    }
+}
+
+package com.genckart.controller;
+
+import com.genckart.dto.ProductDTO;
+import com.genckart.exception.ResourceNotFoundException;
+import com.genckart.service.ProductService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/products")
+public class ProductController {
+
+    @Autowired
+    private ProductService productService;
+
+    private ResponseEntity<Object> createResponse(HttpStatus status, String message, Object data, String endpoint) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", status.value());
+        body.put("message", message);
+        body.put("data", data);
+        body.put("endpoint", endpoint);
+        return new ResponseEntity<>(body, status);
+    }
+
+    @GetMapping
+    public ResponseEntity<Object> getAllProducts() {
+        List<ProductDTO> products = productService.getAllProducts();
+        if (products.isEmpty()) {
+            return createResponse(HttpStatus.NOT_FOUND, "There are no products to display", null, "/api/products");
+        }
+        return createResponse(HttpStatus.OK, "Products retrieved successfully", products, "/api/products");
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Object> getProductById(@PathVariable Integer id) {
+        try {
+            ProductDTO product = productService.getProductById(id);
+            return createResponse(HttpStatus.OK, "Product retrieved successfully", product, "/api/products/" + id);
+        } catch (ResourceNotFoundException ex) {
+            return createResponse(HttpStatus.NOT_FOUND, "Product with id " + id + " not found", null, "/api/products/" + id);
+        }
+    }
+
+    @GetMapping("/search/{name}")
+    public ResponseEntity<Object> getProductsByName(@PathVariable("name") String name) {
+        List<ProductDTO> products = productService.getProductsByName(name);
+        if (products.isEmpty()) {
+            return createResponse(HttpStatus.NOT_FOUND, "Product with name " + name + " not found", null, "/api/products/search/" + name);
+        }
+        return createResponse(HttpStatus.OK, "Products retrieved successfully", products, "/api/products/search/" + name);
+    }
+
+    @PostMapping
+    public ResponseEntity<Object> addProduct(@RequestBody ProductDTO productDTO) {
+        try {
+            ProductDTO savedProduct = productService.addProduct(productDTO);
+            return createResponse(HttpStatus.CREATED, "Product added successfully", savedProduct, "/api/products");
+        } catch (Exception ex) {
+            return createResponse(HttpStatus.BAD_REQUEST, "Error: " + ex.getMessage(), null, "/api/products");
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Object> updateProductDetails(@PathVariable Integer id, @RequestBody ProductDTO productDTO) {
+        try {
+            ProductDTO updatedProduct = productService.updateProductDetails(id, productDTO);
+            return createResponse(HttpStatus.OK, "Product updated successfully", updatedProduct, "/api/products/" + id);
+        } catch (ResourceNotFoundException ex) {
+            return createResponse(HttpStatus.NOT_FOUND, "Product with id " + id + " not found", null, "/api/products/" + id);
+        } catch (Exception ex) {
+            return createResponse(HttpStatus.BAD_REQUEST, "Error: " + ex.getMessage(), null, "/api/products/" + id);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> deleteProduct(@PathVariable Integer id) {
+        try {
+            productService.deleteProduct(id);
+            return createResponse(HttpStatus.OK, "Product deleted successfully", null, "/api/products/" + id);
+        } catch (ResourceNotFoundException ex) {
+            return createResponse(HttpStatus.NOT_FOUND, "Product with id " + id + " not found", null, "/api/products/" + id);
+        }
+    }
+
+    @GetMapping("/{id}/related")
+    public ResponseEntity<Object> getRelatedProducts(@PathVariable Integer id) {
+        List<ProductDTO> relatedProducts = productService.getRelatedProducts(id);
+        if (relatedProducts.isEmpty()) {
+            return createResponse(HttpStatus.NOT_FOUND, "No related products found for product with id " + id, null, "/api/products/" + id + "/related");
+        }
+        return createResponse(HttpStatus.OK, "Related products retrieved successfully", relatedProducts, "/api/products/" + id + "/related");
+    }
+
+    @GetMapping("/related/category/{categoryName}")
+    public ResponseEntity<Object> getRelatedProductsByCategoryName(@PathVariable("categoryName") String categoryName) {
+        List<ProductDTO> relatedProducts = productService.getRelatedProductsByCategoryName(categoryName);
+        if (relatedProducts.isEmpty()) {
+            return createResponse(HttpStatus.NOT_FOUND, "No related products found for category " + categoryName, null, "/api/products/related/category/" + categoryName);
+        }
+        return createResponse(HttpStatus.OK, "Related products retrieved successfully", relatedProducts, "/api/products/related/category/" + categoryName);
+    }
+
+    @GetMapping("/{id}/details")
+    public ResponseEntity<Object> getProductWithReviewsAndRelatedProducts(@PathVariable Integer id) {
+        try {
+            ProductDTO product = productService.getProductWithReviewsAndRelatedProducts(id);
+            return createResponse(HttpStatus.OK, "Product details retrieved successfully", product, "/api/products/" + id + "/details");
+        } catch (ResourceNotFoundException ex) {
+            return createResponse(HttpStatus.NOT_FOUND, "Product with id " + id + " not found", null, "/api/products/" + id + "/details");
+        }
+    }
+}
+
+
+package com.genckart.controller;
+import com.genckart.dto.ReviewDTO;
+import com.genckart.service.ReviewService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/products/reviews")
+public class ReviewController {
+
+    @Autowired
+    private ReviewService reviewService;
+
+    @GetMapping
+    public ResponseEntity<List<ReviewDTO>> getAllReviews() {
+        List<ReviewDTO> reviews = reviewService.getAllReviews();
+        return ResponseEntity.ok(reviews);
+    }
+
+    @GetMapping("/product/{productId}")
+    public ResponseEntity<List<ReviewDTO>> getReviewsByProductId(@PathVariable Integer productId) {
+        List<ReviewDTO> reviews = reviewService.getReviewsByProductId(productId);
+        return ResponseEntity.ok(reviews);
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<ReviewDTO>> getReviewsByUserId(@PathVariable Integer userId) {
+        List<ReviewDTO> reviews = reviewService.getReviewsByUserId(userId);
+        return ResponseEntity.ok(reviews);
+    }
+
+    @PostMapping
+    public ResponseEntity<ReviewDTO> createReview(@RequestBody ReviewDTO reviewDTO) {
+        ReviewDTO savedReview = reviewService.createReview(reviewDTO);
+        return ResponseEntity.ok(savedReview);
+    }
+
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<Void> deleteReview(@PathVariable Integer reviewId) {
+        reviewService.deleteReview(reviewId);
+        return ResponseEntity.noContent().build();
+    }
+}
+package com.genckart.dto;
+
+import lombok.Data;
+
+@Data
+public class CategoryDTO {
+    private Integer categoryId;
+    private String name;
+    private Integer parentId;
+}
+
+package com.genckart.dto;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ProductDTO {
+    private Integer productId;
+    private String name;
+    private double newPrice;
+    private double oldPrice;
+    private String gender;
+    private int quantity;
+    private double rating;
+    private String brand;
+    private String popularity;
+    private String color;
+    private String description;
+    private String image1;
+    private String image2;
+    private String image3;
+    private double discount;
+    private double highlightShippingFee;
+    private String categoryName;
+    private List<ReviewDTO> reviews;
+    private List<ProductDTO> relatedProducts;
+}
+
+package com.genckart.dto;
+
+import lombok.Data;
+
+import java.sql.Timestamp;
+
+@Data
+public class ReviewDTO {
+    private Integer reviewId;
+    private Integer userId;
+    private Integer productId;
+    private int rating;
+    private String reviewText;
+    private UserDTO user;
+    private Timestamp createdAt;// Include user details in the DTO
+}
+package com.genckart.dto;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserDTO {
+
+    private Integer userId;
+
+    @NotBlank(message = "Name is mandatory")
+    @Size(min = 2, max = 255, message = "Name must be between 2 and 255 characters")
+    private String name;
+
+    @Email(message = "Email should be valid")
+    @NotBlank(message = "Email is mandatory")
+    private String email;
+
+    @NotBlank(message = "Phone number is mandatory")
+    @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Phone number is invalid")
+    private String phoneNumber;
+
+    @NotBlank(message = "Password is mandatory")
+    @Size(min = 8, message = "Password must be at least 8 characters long")
+    private String passwordHash;
+
+    private String role;
+}
+
+package com.genckart.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "Categories")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class Category {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Min(value = 1, message = "Category ID must be greater than or equal to 1")
+    private Integer categoryId;
+
+    @Column(nullable = false)
+    @NotNull(message = "Name cannot be null")
+    @Size(min = 2, max = 50, message = "Name must be between 2 and 50 characters")
+    private String name;
+
+    private Integer parentId;
+}
+package com.genckart.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import lombok.*;
+import java.sql.Timestamp;
+import java.util.Set;
+
+@Entity
+@Table(name = "Products")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+public class Product {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer productId;
+
+    @Column(nullable = false)
+    @NotNull(message = "Name cannot be null")
+    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+    private String name;
+
+    @Column(nullable = false)
+    @NotNull(message = "New price cannot be null")
+    @Positive(message = "New price must be positive")
+    private double newPrice;
+
+    @Column(nullable = false)
+    @NotNull(message = "Old price cannot be null")
+    @Positive(message = "Old price must be positive")
+    private double oldPrice;
+
+    private String gender;
+
+    @ManyToOne
+    @JoinColumn(name = "category_name", nullable = false)
+    @NotNull(message = "Category cannot be null")
+    private Category category;
+
+    @Min(value = 0, message = "Quantity cannot be negative")
+    private int quantity;
+
+    @Min(value = 0, message = "Rating cannot be negative")
+    @Max(value = 5, message = "Rating cannot be more than 5")
+    private double rating;
+
+    private String brand;
+
+    private String popularity;
+
+    private String color;
+
+    @Lob
+    private String description;
+
+    private String image1;
+
+    private String image2;
+
+    private String image3;
+
+    @Min(value = 0, message = "Discount cannot be negative")
+    private double discount;
+
+    @Column(name = "highlights_shipping_fee")
+    @Min(value = 0, message = "Highlight shipping fee cannot be negative")
+    private double highlightShippingFee;
+
+    @Column(updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private Timestamp createdAt;
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    private Set<Review> reviews;
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    private Set<RelatedProducts> relatedProducts;
+
+//    @JsonIgnore
+//    @OneToMany(mappedBy = "product")
+//    private Set<CartItem> cartItems;
+
+}
+package com.genckart.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name="Related_Products")
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+public class RelatedProducts {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer relatedId;
+
+    @ManyToOne
+    @JoinColumn(name="product_id", nullable=false)
+    private Product product;
+
+    @ManyToOne
+    @JoinColumn(name="related_product_id", nullable=false)
+    private Product relatedProducts;
+}
+
+package com.genckart.entity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.*;
+import lombok.*;
+import java.sql.Timestamp;
+
+@Entity
+@Table(name="Reviews")
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+public class Review {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer reviewId;
+
+    @Column(name="user_id", nullable = false)
+    private Integer userId;
+
+    @ManyToOne
+    @JoinColumn(name="product_id", nullable = false)
+    @JsonBackReference
+    private Product product;
+
+    @Column(nullable = false)
+    private int rating;
+
+    private String reviewText;
+
+    @Column(nullable = false, updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private Timestamp createdAt;
+}
+
+package com.genckart.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+@ControllerAdvice
+public class GlobalException {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Object> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("error", "Product Not Found");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false).substring(4));
+
+        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Object> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Bad Request");
+        body.put("message", "Method parameter '" + ex.getName() + "': " + ex.getMessage());
+        body.put("path", request.getDescription(false).substring(4));
+
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Object> handleRuntimeException(RuntimeException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Bad Request");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false).substring(4));
+
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
+    // Add more exception handlers as needed
+}
+package com.genckart.exception;
+
+public class ResourceNotFoundException extends RuntimeException{
+    public ResourceNotFoundException() {
+    }
+
+    public ResourceNotFoundException(String categoryNotFound) {
+
+    }
+}
+
+package com.genckart.repository;
+import com.genckart.entity.Category;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+public interface CategoryRepository extends JpaRepository<Category, Integer> {
+    Optional<Category> findByName(String name);
+}
+
+package com.genckart.repository;
+import com.genckart.entity.Category;
+import com.genckart.entity.Product;
+
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+public interface ProductRepository extends JpaRepository<Product, Integer> {
+    List<Product> findByNameContaining(String name);
+
+    @Query("SELECT p FROM Product p WHERE p.category.categoryId = :categoryId AND p.productId <> :productId")
+    List<Product> findRelatedProductsByCategory(@Param("categoryId") Integer categoryId, @Param("productId") Integer productId);
+
+    List<Product> findByCategory(Category category);
+
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.reviews LEFT JOIN FETCH p.relatedProducts WHERE p.productId = :productId")
+    Product findProductWithReviewsAndRelatedProducts(@Param("productId") Integer productId);
+
+//    @Query("SELECT p FROM Product p WHERE p.name LIKE %:pattern% AND p.productId <> :productId")
+//    List<Product> findRelatedProductsByPattern(@Param("pattern") String pattern, @Param("productId") Integer productId);
+}
+
+package com.genckart.repository;
+import com.genckart.entity.Review;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface ReviewRepository extends JpaRepository<Review, Integer> {
+    List<Review> findByProductProductId(Integer productId);
+    List<Review> findByUserId(Integer userId);
+}
+package com.genckart.service;
+
+import com.genckart.dto.CategoryDTO;
+import java.util.List;
+
+public interface CategoryService {
+    List<CategoryDTO> getAllCategories();
+    CategoryDTO createCategory(CategoryDTO categoryDTO);
+    CategoryDTO updateCategory(int id, CategoryDTO categoryDTO);
+    void deleteCategory(int id);
+    CategoryDTO getByCategoryId(int id);
+    CategoryDTO getByCategoryName(String name);
+}
+
+package com.genckart.service;
+import com.genckart.dto.CategoryDTO;
+import com.genckart.entity.Category;
+import com.genckart.repository.CategoryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+public class CategoryServiceImpl implements CategoryService {
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Override
+    public List<CategoryDTO> getAllCategories() {
+        return categoryRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public CategoryDTO createCategory(CategoryDTO categoryDTO) {
+        Category category = convertToEntity(categoryDTO);
+        category = categoryRepository.save(category);
+        return convertToDTO(category);
+    }
+
+    @Override
+    public CategoryDTO updateCategory(int id, CategoryDTO categoryDTO) {
+        Category category = categoryRepository.findById(id).orElseThrow(() -> new RuntimeException("Category not found"));
+        // Update category details
+        category.setName(categoryDTO.getName());
+        category.setParentId(categoryDTO.getParentId());
+        category = categoryRepository.save(category);
+        return convertToDTO(category);
+    }
+
+    @Override
+    public void deleteCategory(int id) {
+        categoryRepository.deleteById(id);
+    }
+
+    @Override
+    public CategoryDTO getByCategoryId(int id) {
+        Category category = categoryRepository.findById(id).orElseThrow(() -> new RuntimeException("Category not found"));
+        return convertToDTO(category);
+    }
+
+    @Override
+    public CategoryDTO getByCategoryName(String name) {
+        Category category = categoryRepository.findByName(name).orElseThrow(() -> new RuntimeException("Category not found"));
+        return convertToDTO(category);
+    }
+
+    private CategoryDTO convertToDTO(Category category) {
+        CategoryDTO categoryDTO = new CategoryDTO();
+        // Set fields from category to categoryDTO
+        categoryDTO.setCategoryId(category.getCategoryId());
+        categoryDTO.setName(category.getName());
+        categoryDTO.setParentId(category.getParentId());
+        return categoryDTO;
+    }
+
+    private Category convertToEntity(CategoryDTO categoryDTO) {
+        Category category = new Category();
+        // Set fields from categoryDTO to category
+        category.setName(categoryDTO.getName());
+        category.setParentId(categoryDTO.getParentId());
+        return category;
+    }
+}
+
+package com.genckart.service;
+
+import com.genckart.dto.ProductDTO;
+import java.util.List;
+
+public interface ProductService {
+    List<ProductDTO> getAllProducts();
+    ProductDTO getProductById(Integer id);
+    List<ProductDTO> getProductsByName(String name);
+    ProductDTO addProduct(ProductDTO productDTO);
+    ProductDTO updateProductDetails(Integer id, ProductDTO productDTO);
+    void deleteProduct(Integer id);
+    List<ProductDTO> getRelatedProducts(Integer productId);
+    //    List<ProductDTO> getRelatedProductsByName(String name, Integer productId);
+    List<ProductDTO> getRelatedProductsByCategoryName(String categoryName);
+    ProductDTO getProductWithReviewsAndRelatedProducts(Integer productId);
+}
+
+package com.genckart.service;
+
+import com.genckart.dto.ProductDTO;
+import com.genckart.dto.ReviewDTO;
+import com.genckart.entity.Category;
+import com.genckart.entity.Product;
+import com.genckart.exception.ResourceNotFoundException;
+import com.genckart.repository.CategoryRepository;
+import com.genckart.repository.ProductRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class ProductServiceImpl implements ProductService {
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Override
+    public List<ProductDTO> getAllProducts() {
+        return productRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public ProductDTO getProductById(Integer id) {
+        Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        return convertToDTO(product);
+    }
+
+    @Override
+    public List<ProductDTO> getProductsByName(String name) {
+        return productRepository.findByNameContaining(name).stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public ProductDTO addProduct(ProductDTO productDTO) {
+        Product product = convertToEntity(productDTO);
+        product = productRepository.save(product);
+        return convertToDTO(product);
+    }
+
+    @Override
+    public ProductDTO updateProductDetails(Integer id, ProductDTO productDTO) {
+        Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        // Update product details
+        product.setName(productDTO.getName());
+        product.setNewPrice(productDTO.getNewPrice());
+        product.setOldPrice(productDTO.getOldPrice());
+        product.setGender(productDTO.getGender());
+        product.setQuantity(productDTO.getQuantity());
+        product.setRating(productDTO.getRating());
+        product.setBrand(productDTO.getBrand());
+        product.setPopularity(productDTO.getPopularity());
+        product.setColor(productDTO.getColor());
+        product.setDescription(productDTO.getDescription());
+        product.setImage1(productDTO.getImage1());
+        product.setImage2(productDTO.getImage2());
+        product.setImage3(productDTO.getImage3());
+        product.setDiscount(productDTO.getDiscount());
+        product.setHighlightShippingFee(productDTO.getHighlightShippingFee());
+
+        Category category = categoryRepository.findByName(productDTO.getCategoryName())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        product.setCategory(category);
+
+        product = productRepository.save(product);
+        return convertToDTO(product);
+    }
+
+    @Override
+    @Transactional
+    public void deleteProduct(Integer id) {
+        productRepository.deleteById(id);
+    }
+
+    @Override
+    public List<ProductDTO> getRelatedProducts(Integer productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        Integer categoryId = product.getCategory().getCategoryId();
+        return productRepository.findRelatedProductsByCategory(categoryId, productId)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+//    @Override
+//    public List<ProductDTO> getRelatedProductsByName(String name, Integer productId) {
+//        Product product = productRepository.findById(productId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+//        String pattern = generatePattern(product.getName());
+//        return productRepository.findRelatedProductsByPattern(pattern, productId)
+//                .stream()
+//                .map(this::convertToDTO)
+//                .collect(Collectors.toList());
+//    }
+
+    private String generatePattern(String name) {
+        // Generate a pattern to match more than 4 consecutive letters
+        StringBuilder pattern = new StringBuilder();
+        for (int i = 0; i <= name.length() - 4; i++) {
+            pattern.append(name.substring(i, i + 4)).append("%");
+        }
+        return pattern.toString();
+    }
+
+    @Override
+    public List<ProductDTO> getRelatedProductsByCategoryName(String categoryName) {
+        Category category = categoryRepository.findByName(categoryName)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        return productRepository.findByCategory(category).stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public ProductDTO getProductWithReviewsAndRelatedProducts(Integer productId) {
+        Product product = productRepository.findProductWithReviewsAndRelatedProducts(productId);
+        return convertToDTOWithDetails(product);
+    }
+
+    private ProductDTO convertToDTO(Product product) {
+        ProductDTO productDTO = new ProductDTO();
+        // Set fields from product to productDTO
+        productDTO.setProductId(product.getProductId());
+        productDTO.setName(product.getName());
+        productDTO.setNewPrice(product.getNewPrice());
+        productDTO.setOldPrice(product.getOldPrice());
+        productDTO.setGender(product.getGender());
+        productDTO.setQuantity(product.getQuantity());
+        productDTO.setRating(product.getRating());
+        productDTO.setBrand(product.getBrand());
+        productDTO.setPopularity(product.getPopularity());
+        productDTO.setColor(product.getColor());
+        productDTO.setDescription(product.getDescription());
+        productDTO.setImage1(product.getImage1());
+        productDTO.setImage2(product.getImage2());
+        productDTO.setImage3(product.getImage3());
+        productDTO.setDiscount(product.getDiscount());
+        productDTO.setHighlightShippingFee(product.getHighlightShippingFee());
+        productDTO.setCategoryName(product.getCategory().getName()); // Set category name
+        return productDTO;
+    }
+
+    private ProductDTO convertToDTOWithDetails(Product product) {
+        ProductDTO productDTO = convertToDTO(product);
+
+        // Set reviews
+        productDTO.setReviews(product.getReviews().stream().map(review -> {
+            ReviewDTO reviewDTO = new ReviewDTO();
+            reviewDTO.setReviewId(review.getReviewId());
+            reviewDTO.setUserId(review.getUserId());
+            reviewDTO.setRating(review.getRating());
+            reviewDTO.setReviewText(review.getReviewText());
+            reviewDTO.setCreatedAt(review.getCreatedAt());
+            return reviewDTO;
+        }).collect(Collectors.toList()));
+
+        // Set related products
+        productDTO.setRelatedProducts(product.getRelatedProducts().stream().map(relatedProduct -> {
+            ProductDTO relatedProductDTO = new ProductDTO();
+            relatedProductDTO.setProductId(relatedProduct.getRelatedProducts().getProductId());
+            relatedProductDTO.setName(relatedProduct.getRelatedProducts().getName());
+            relatedProductDTO.setNewPrice(relatedProduct.getRelatedProducts().getNewPrice());
+            relatedProductDTO.setOldPrice(relatedProduct.getRelatedProducts().getOldPrice());
+            relatedProductDTO.setGender(relatedProduct.getRelatedProducts().getGender());
+            relatedProductDTO.setQuantity(relatedProduct.getRelatedProducts().getQuantity());
+            relatedProductDTO.setRating(relatedProduct.getRelatedProducts().getRating());
+            relatedProductDTO.setBrand(relatedProduct.getRelatedProducts().getBrand());
+            relatedProductDTO.setPopularity(relatedProduct.getRelatedProducts().getPopularity());
+            relatedProductDTO.setColor(relatedProduct.getRelatedProducts().getColor());
+            relatedProductDTO.setDescription(relatedProduct.getRelatedProducts().getDescription());
+            relatedProductDTO.setImage1(relatedProduct.getRelatedProducts().getImage1());
+            relatedProductDTO.setImage2(relatedProduct.getRelatedProducts().getImage2());
+            relatedProductDTO.setImage3(relatedProduct.getRelatedProducts().getImage3());
+            relatedProductDTO.setDiscount(relatedProduct.getRelatedProducts().getDiscount());
+            relatedProductDTO.setHighlightShippingFee(relatedProduct.getRelatedProducts().getHighlightShippingFee());
+            relatedProductDTO.setCategoryName(relatedProduct.getRelatedProducts().getCategory().getName());
+            return relatedProductDTO;
+        }).collect(Collectors.toList()));
+
+        return productDTO;
+    }
+
+    private Product convertToEntity(ProductDTO productDTO) {
+        Product product = new Product();
+        // Set fields from productDTO to product
+        product.setName(productDTO.getName());
+        product.setNewPrice(productDTO.getNewPrice());
+        product.setOldPrice(productDTO.getOldPrice());
+        product.setGender(productDTO.getGender());
+        product.setQuantity(productDTO.getQuantity());
+        product.setRating(productDTO.getRating());
+        product.setBrand(productDTO.getBrand());
+        product.setPopularity(productDTO.getPopularity());
+        product.setColor(productDTO.getColor());
+        product.setDescription(productDTO.getDescription());
+        product.setImage1(productDTO.getImage1());
+        product.setImage2(productDTO.getImage2());
+        product.setImage3(productDTO.getImage3());
+        product.setDiscount(productDTO.getDiscount());
+        product.setHighlightShippingFee(productDTO.getHighlightShippingFee());
+
+        Category category = categoryRepository.findByName(productDTO.getCategoryName())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        product.setCategory(category);
+
+        return product;
+    }
+}
+package com.genckart.service;
+
+import com.genckart.dto.ReviewDTO;
+import java.util.List;
+
+public interface ReviewService {
+    List<ReviewDTO> getAllReviews();
+    List<ReviewDTO> getReviewsByProductId(Integer productId);
+    List<ReviewDTO> getReviewsByUserId(Integer userId);
+    ReviewDTO createReview(ReviewDTO reviewDTO);
+    void deleteReview(Integer reviewId);
+}
+package com.genckart.service;
+import com.genckart.clients.UserClient;
+import com.genckart.dto.ReviewDTO;
+import com.genckart.dto.UserDTO;
+import com.genckart.entity.Product;
+import com.genckart.entity.Review;
+import com.genckart.repository.ProductRepository;
+import com.genckart.repository.ReviewRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class ReviewServiceImpl implements ReviewService {
+
+    @Autowired
+    private ReviewRepository reviewRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private UserClient userClient;
+
+    @Override
+    public List<ReviewDTO> getAllReviews() {
+        return reviewRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ReviewDTO> getReviewsByProductId(Integer productId) {
+        return reviewRepository.findByProductProductId(productId).stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ReviewDTO> getReviewsByUserId(Integer userId) {
+        return reviewRepository.findByUserId(userId).stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    public ReviewDTO createReview(ReviewDTO reviewDTO) {
+        Review review = new Review();
+        // Fetch user details from user profile management microservice
+        ResponseEntity<UserDTO> responseEntity = userClient.getUserById(reviewDTO.getUserId());
+        UserDTO userDTO = responseEntity.getBody();
+
+        // Fetch product details
+        Product product = productRepository.findById(reviewDTO.getProductId())
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        // Set fields from reviewDTO to review
+        review.setRating(reviewDTO.getRating());
+        review.setReviewText(reviewDTO.getReviewText());
+        review.setUserId(userDTO.getUserId()); // Store userId instead of UserInfo object
+        review.setProduct(product);
+
+        review = reviewRepository.save(review);
+        return convertToDTO(review, userDTO);
+    }
+
+    @Override
+    public void deleteReview(Integer reviewId) {
+        reviewRepository.deleteById(reviewId);
+    }
+
+    private ReviewDTO convertToDTO(Review review, UserDTO userDTO) {
+        ReviewDTO reviewDTO = new ReviewDTO();
+        // Set fields from review to reviewDTO
+        reviewDTO.setReviewId(review.getReviewId());
+        reviewDTO.setUserId(review.getUserId());
+        reviewDTO.setProductId(review.getProduct().getProductId());
+        reviewDTO.setRating(review.getRating());
+        reviewDTO.setReviewText(review.getReviewText());
+        reviewDTO.setUser(userDTO); // Include user details in the DTO
+        return reviewDTO;
+    }
+
+    private ReviewDTO convertToDTO(Review review) {
+        ReviewDTO reviewDTO = new ReviewDTO();
+        // Set fields from review to reviewDTO
+        reviewDTO.setReviewId(review.getReviewId());
+        reviewDTO.setUserId(review.getUserId());
+        reviewDTO.setProductId(review.getProduct().getProductId());
+        reviewDTO.setRating(review.getRating());
+        reviewDTO.setReviewText(review.getReviewText());
+        return reviewDTO;
+    }
+}
+
+package com.genckart;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+
+@SpringBootApplication
+@EnableFeignClients
+@EnableDiscoveryClient
+public class ProductServiceApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ProductServiceApplication.class, args);
+	}
+
+}
+
+user microservice:
+
+package com.genckart.clients;
+
+import com.genckart.dto.AddressDTO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.*;
+
+@FeignClient(name = "address-service")
+public interface AddressClient {
+
+    @PostMapping("/user/addresses")
+    AddressDTO saveAddress(@RequestBody AddressDTO addressDTO);
+
+    @PutMapping("/user/addresses/{id}")
+    AddressDTO updateAddress(@PathVariable int id, @RequestBody AddressDTO addressDTO);
+
+    @GetMapping("/user/addresses/{id}")
+    AddressDTO getAddressById(@PathVariable int id);
+}
+
+
+package com.genckart.clients;
+
+import com.genckart.dto.UserDTO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.*;
+
+@FeignClient(name = "user-service")
+public interface UserClient {
+
+    @PostMapping("/user/register")
+    UserDTO registerUser(@RequestBody UserDTO userDTO);
+
+    @PutMapping("/user/profile")
+    UserDTO updateUser(@RequestBody UserDTO userDTO);
+
+    @GetMapping("/user/profile/{id}")
+    UserDTO getUserById(@PathVariable Integer id);
+}
+
+
+package com.genckart.clients;
+
+import com.genckart.dto.UserPreferenceDTO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.*;
+
+@FeignClient(name = "user-preference-service")
+public interface UserPreferenceClient {
+
+    @PostMapping("/user/preferences")
+    UserPreferenceDTO saveUserPreference(@RequestBody UserPreferenceDTO userPreferenceDTO);
+
+    @PutMapping("/user/preferences")
+    UserPreferenceDTO updateUserPreference(@RequestBody UserPreferenceDTO userPreferenceDTO);
+}
+
+package com.genckart.controller;
+import com.genckart.dto.AddressDTO;
+import com.genckart.service.AddressService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/user/addresses")
+public class AddressController {
+
+    @Autowired
+    private AddressService addressService;
+
+    @PostMapping
+    public ResponseEntity<AddressDTO> saveAddress(@RequestBody AddressDTO addressDTO) {
+        AddressDTO savedAddress = addressService.saveAddress(addressDTO);
+        return new ResponseEntity<>(savedAddress, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<AddressDTO> updateAddress(@PathVariable int id, @RequestBody AddressDTO addressDTO) {
+        addressDTO.setAddressId(id);
+        AddressDTO updatedAddress = addressService.updateAddress(addressDTO);
+        return new ResponseEntity<>(updatedAddress, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AddressDTO> getAddressById(@PathVariable int id) {
+        AddressDTO address = addressService.getAddressById(id);
+        return new ResponseEntity<>(address, HttpStatus.OK);
+    }
+}
+
+package com.genckart.controller;
+import com.genckart.dto.UserAuthDTO;
+import com.genckart.dto.UserDTO;
+import com.genckart.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/user")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @PostMapping("/register")
+    public ResponseEntity<UserDTO> registerUser(@Valid @RequestBody UserDTO userDTO) {
+        UserDTO registeredUser = userService.registerUser(userDTO);
+        return new ResponseEntity<>(registeredUser, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<UserDTO> updateUser(@Valid @RequestBody UserDTO userDTO) {
+        UserDTO updatedUser = userService.updateUser(userDTO);
+        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+    }
+
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Integer id) {
+        UserDTO user = userService.getUserById(id);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    @GetMapping("/profile/name/{name}")
+    public ResponseEntity<UserAuthDTO> getUserByName(@PathVariable String name) {
+        UserAuthDTO user = userService.getUserByName(name);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    @GetMapping("/profile/email/{email}")
+    public ResponseEntity<UserAuthDTO> getUserByEmail(@PathVariable String email) {
+        UserAuthDTO user = userService.getUserByEmail(email);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+}
+
+package com.genckart.controller;
+
+import com.genckart.dto.UserPreferenceDTO;
+import com.genckart.service.UserPreferenceService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/user/preferences")
+public class UserPreferenceController {
+
+    @Autowired
+    private UserPreferenceService userPreferenceService;
+
+    @PostMapping
+    public ResponseEntity<UserPreferenceDTO> saveUserPreference(@RequestBody UserPreferenceDTO userPreferenceDTO) {
+        UserPreferenceDTO savedPreference = userPreferenceService.saveUserPreference(userPreferenceDTO);
+        return new ResponseEntity<>(savedPreference, HttpStatus.CREATED);
+    }
+
+    @PutMapping
+    public ResponseEntity<UserPreferenceDTO> updateUserPreference(@RequestBody UserPreferenceDTO userPreferenceDTO) {
+        UserPreferenceDTO updatedPreference = userPreferenceService.saveUserPreference(userPreferenceDTO);
+        return new ResponseEntity<>(updatedPreference, HttpStatus.OK);
+    }
+}
+
+package com.genckart.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class AddressDTO {
+    private int addressId;
+    private Integer userId;
+    private String street;
+    private String city;
+    private String state;
+    private String postalCode;
+    private String country;
+}
+package com.genckart.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+
+public class UserAuthDTO {
+    private Integer userId;
+    private String userName;
+    private String email;
+    private String role;
+}
+
+
+package com.genckart.dto;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserDTO {
+
+    private Integer userId;
+
+    @NotBlank(message = "Name is mandatory")
+    @Size(min = 2, max = 255, message = "Name must be between 2 and 255 characters")
+    private String name;
+
+    @Email(message = "Email should be valid")
+    @NotBlank(message = "Email is mandatory")
+    private String email;
+
+    @NotBlank(message = "Phone number is mandatory")
+    @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Phone number is invalid")
+    private String phoneNumber;
+
+    @JsonIgnore
+    @NotBlank(message = "Password is mandatory")
+    @Size(min = 8, message = "Password must be at least 8 characters long")
+    private String passwordHash;
+
+    private String role;
+}
+package com.genckart.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserPreferenceDTO {
+    private Integer preferenceId;
+    private Integer userId;
+    private Integer categoryId;
+    private String brand;
+    private Double minPrice;
+    private Double maxPrice;
+    private String gender;
+}
+package com.genckart.entity;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.*;
+import lombok.*;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@Entity
+@Table(name = "Address")
+@ToString
+public class Address {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int addressId;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
+    private User user;
+
+    @Column(nullable = false)
+    private String street;
+
+    @Column(nullable = false)
+    private String city;
+
+    @Column(nullable = false)
+    private String state;
+
+    @Column(nullable = false)
+    private String postalCode;
+
+    @Column(nullable = false)
+    private String country;
+}
+package com.genckart.entity;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@Entity
+@Table(name = "users")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer userId;
+
+    @NotBlank(message = "Name is mandatory")
+    @Size(min = 2, max = 255, message = "Name must be between 2 and 255 characters")
+    private String name;
+
+    @Email(message = "Email should be valid")
+    @NotBlank(message = "Email is mandatory")
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    @NotBlank(message = "Phone number is mandatory")
+    @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Phone number is invalid")
+    @Column(unique = true, nullable = false)
+    private String phoneNumber;
+
+    @NotBlank(message = "Password is mandatory")
+    @Size(min = 8, message = "Password must be at least 8 characters long")
+    @Column(nullable = false)
+    private String passwordHash;
+
+    @Column(nullable = false)
+    private String role;
+}
+package com.genckart.entity;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "user_preferences")
+public class UserPreference {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer preferenceId;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(name = "category_id")
+    private Integer categoryId;
+
+    @Column(name = "brand")
+    private String brand;
+
+    @Column(name = "min_price")
+    private Double minPrice;
+
+    @Column(name = "max_price")
+    private Double maxPrice;
+
+    @Column(name = "gender")
+    private String gender;
+}
+package com.genckart.exception;
+
+public class AddressNotFoundException extends RuntimeException{
+    public AddressNotFoundException() {
+    }
+
+    public AddressNotFoundException(String message) {
+        super(message);
+    }
+}
+package com.genckart.exception;
+
+public class UserNotFoundException extends RuntimeException {
+    public UserNotFoundException() {
+    }
+
+    public UserNotFoundException(String message) {
+        super(message);
+    }
+}
+package com.genckart.repository;
+
+import com.genckart.entity.Address;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface AddressRepository extends JpaRepository<Address, Integer> {
+}
+package com.genckart.repository;
+
+import com.genckart.entity.UserPreference;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserPreferenceRepository extends JpaRepository<UserPreference, Integer> {
+}
+package com.genckart.repository;
+
+import com.genckart.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<User, Integer> {
+    Optional<User> findByName(String name);
+    Optional<User> findByEmail(String email);
+}
+package com.genckart.service;
+
+import com.genckart.dto.AddressDTO;
+
+public interface AddressService {
+    AddressDTO saveAddress(AddressDTO addressDTO);
+    AddressDTO updateAddress(AddressDTO addressDTO);
+    AddressDTO getAddressById(int addressId);
+}
+package com.genckart.service;
+import com.genckart.dto.AddressDTO;
+import com.genckart.entity.Address;
+import com.genckart.entity.User;
+import com.genckart.exception.AddressNotFoundException;
+import com.genckart.exception.UserNotFoundException;
+import com.genckart.repository.AddressRepository;
+import com.genckart.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class AddressServiceImpl implements AddressService {
+
+    @Autowired
+    private AddressRepository addressRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Override
+    public AddressDTO saveAddress(AddressDTO addressDTO) {
+        Address address = convertToEntity(addressDTO);
+        Address savedAddress = addressRepository.save(address);
+        return convertToDTO(savedAddress);
+    }
+
+    @Override
+    public AddressDTO updateAddress(AddressDTO addressDTO) {
+        Address address = convertToEntity(addressDTO);
+        Address updatedAddress = addressRepository.save(address);
+        return convertToDTO(updatedAddress);
+    }
+
+    @Override
+    public AddressDTO getAddressById(int addressId) {
+        Address address = addressRepository.findById(addressId).orElseThrow(() -> new AddressNotFoundException("Address not found"));
+        return convertToDTO(address);
+    }
+
+    private Address convertToEntity(AddressDTO addressDTO) {
+        Address address = new Address();
+        address.setAddressId(addressDTO.getAddressId());
+        address.setStreet(addressDTO.getStreet());
+        address.setCity(addressDTO.getCity());
+        address.setState(addressDTO.getState());
+        address.setPostalCode(addressDTO.getPostalCode());
+        address.setCountry(addressDTO.getCountry());
+
+        // Set the user
+        User user = userRepository.findById(addressDTO.getUserId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + addressDTO.getUserId()));
+        address.setUser(user);
+
+        return address;
+    }
+
+    private AddressDTO convertToDTO(Address address) {
+        AddressDTO addressDTO = new AddressDTO();
+        addressDTO.setAddressId(address.getAddressId());
+        addressDTO.setStreet(address.getStreet());
+        addressDTO.setCity(address.getCity());
+        addressDTO.setState(address.getState());
+        addressDTO.setPostalCode(address.getPostalCode());
+        addressDTO.setCountry(address.getCountry());
+        addressDTO.setUserId(address.getUser().getUserId());
+        return addressDTO;
+    }
+}
+package com.genckart.service;
+
+import com.genckart.dto.UserPreferenceDTO;
+
+public interface UserPreferenceService {
+    UserPreferenceDTO saveUserPreference(UserPreferenceDTO userPreferenceDTO);
+}
+package com.genckart.service;
+
+import com.genckart.dto.UserPreferenceDTO;
+import com.genckart.entity.User;
+import com.genckart.entity.UserPreference;
+import com.genckart.exception.UserNotFoundException;
+import com.genckart.repository.UserPreferenceRepository;
+import com.genckart.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserPreferenceServiceImpl implements UserPreferenceService {
+
+    @Autowired
+    private UserPreferenceRepository userPreferenceRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Override
+    public UserPreferenceDTO saveUserPreference(UserPreferenceDTO userPreferenceDTO) {
+        UserPreference userPreference = convertToEntity(userPreferenceDTO);
+        UserPreference savedUserPreference = userPreferenceRepository.save(userPreference);
+        return convertToDTO(savedUserPreference);
+    }
+
+    private UserPreference convertToEntity(UserPreferenceDTO userPreferenceDTO) {
+        UserPreference userPreference = new UserPreference();
+        userPreference.setPreferenceId(userPreferenceDTO.getPreferenceId());
+        userPreference.setCategoryId(userPreferenceDTO.getCategoryId());
+        userPreference.setBrand(userPreferenceDTO.getBrand());
+        userPreference.setMinPrice(userPreferenceDTO.getMinPrice());
+        userPreference.setMaxPrice(userPreferenceDTO.getMaxPrice());
+        userPreference.setGender(userPreferenceDTO.getGender());
+
+        // Set the user
+        User user = userRepository.findById(userPreferenceDTO.getUserId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userPreferenceDTO.getUserId()));
+        userPreference.setUser(user);
+
+        return userPreference;
+    }
+
+    private UserPreferenceDTO convertToDTO(UserPreference userPreference) {
+        UserPreferenceDTO userPreferenceDTO = new UserPreferenceDTO();
+        userPreferenceDTO.setPreferenceId(userPreference.getPreferenceId());
+        userPreferenceDTO.setCategoryId(userPreference.getCategoryId());
+        userPreferenceDTO.setBrand(userPreference.getBrand());
+        userPreferenceDTO.setMinPrice(userPreference.getMinPrice());
+        userPreferenceDTO.setMaxPrice(userPreference.getMaxPrice());
+        userPreferenceDTO.setGender(userPreference.getGender());
+        userPreferenceDTO.setUserId(userPreference.getUser().getUserId());
+        return userPreferenceDTO;
+    }
+}
+package com.genckart.service;
+
+import com.genckart.dto.UserAuthDTO;
+import com.genckart.dto.UserDTO;
+
+public interface UserService {
+    UserDTO registerUser(UserDTO userDTO);
+    UserDTO updateUser(UserDTO userDTO);
+    UserDTO getUserById(Integer userId);
+    UserAuthDTO getUserByName(String userName);
+    UserAuthDTO getUserByEmail(String email);
+}
+package com.genckart.service;
+
+import com.genckart.dto.UserAuthDTO;
+import com.genckart.dto.UserDTO;
+import com.genckart.entity.User;
+import com.genckart.exception.UserNotFoundException;
+import com.genckart.repository.UserRepository;
+import com.genckart.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserServiceImpl implements UserService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Override
+    public UserDTO registerUser(UserDTO userDTO) {
+        User user = convertToEntity(userDTO);
+        User savedUser = userRepository.save(user);
+        return convertToDTO(savedUser);
+    }
+
+    @Override
+    public UserDTO updateUser(UserDTO userDTO) {
+        User existingUser = userRepository.findById(userDTO.getUserId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userDTO.getUserId()));
+
+        existingUser.setName(userDTO.getName());
+        existingUser.setEmail(userDTO.getEmail());
+        existingUser.setPhoneNumber(userDTO.getPhoneNumber());
+        existingUser.setPasswordHash(userDTO.getPasswordHash());
+        existingUser.setRole(userDTO.getRole());
+
+        User updatedUser = userRepository.save(existingUser);
+        return convertToDTO(updatedUser);
+    }
+
+    @Override
+    public UserDTO getUserById(Integer userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        return convertToDTO(user);
+    }
+
+    @Override
+    public UserAuthDTO getUserByName(String userName) {
+        User user = userRepository.findByName(userName).orElseThrow(() -> new UserNotFoundException("User not found with name: " + userName));
+        return convertToAuthDTO(user);
+    }
+
+    @Override
+    public UserAuthDTO getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+        return convertToAuthDTO(user);
+    }
+
+    private User convertToEntity(UserDTO userDTO) {
+        User user = new User();
+        user.setUserId(userDTO.getUserId());
+        user.setName(userDTO.getName());
+        user.setEmail(userDTO.getEmail());
+        user.setPhoneNumber(userDTO.getPhoneNumber());
+        user.setPasswordHash(userDTO.getPasswordHash());
+        user.setRole(userDTO.getRole());
+        return user;
+    }
+
+    private UserDTO convertToDTO(User user) {
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUserId(user.getUserId());
+        userDTO.setName(user.getName());
+        userDTO.setEmail(user.getEmail());
+        userDTO.setPhoneNumber(user.getPhoneNumber());
+        userDTO.setPasswordHash(user.getPasswordHash());
+        userDTO.setRole(user.getRole());
+        return userDTO;
+    }
+
+    private UserAuthDTO convertToAuthDTO(User user) {
+        UserAuthDTO userAuthDTO = new UserAuthDTO();
+        userAuthDTO.setUserId(user.getUserId());
+        userAuthDTO.setUserName(user.getName());
+        userAuthDTO.setEmail(user.getEmail());
+        userAuthDTO.setRole(user.getRole());
+        return userAuthDTO;
+    }
+}
+
+package com.genckart;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+
+@SpringBootApplication
+@EnableFeignClients
+@EnableDiscoveryClient
+public class UserProfileManagementServiceApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(UserProfileManagementServiceApplication.class, args);
+	}
+
+}
 
 
 
 
 
-mysql> use product_service_db
-Database changed
-mysql> show tables;
-+------------------------------+
-| Tables_in_product_service_db |
-+------------------------------+
-| categories                   |
-| products                     |
-| related_products             |
-| reviews                      |
-+------------------------------+
-4 rows in set (0.01 sec)
-
-mysql> desc categories;
-+-------------+-------------+------+-----+---------+----------------+
-| Field       | Type        | Null | Key | Default | Extra          |
-+-------------+-------------+------+-----+---------+----------------+
-| category_id | int         | NO   | PRI | NULL    | auto_increment |
-| name        | varchar(50) | NO   |     | NULL    |                |
-| parent_id   | int         | YES  |     | NULL    |                |
-+-------------+-------------+------+-----+---------+----------------+
-3 rows in set (0.03 sec)
-
-mysql> desc products;
-+-------------------------+--------------+------+-----+-------------------+-------------------+
-| Field                   | Type         | Null | Key | Default           | Extra             |
-+-------------------------+--------------+------+-----+-------------------+-------------------+
-| product_id              | int          | NO   | PRI | NULL              | auto_increment    |
-| name                    | varchar(100) | NO   |     | NULL              |                   |
-| new_price               | double       | NO   |     | NULL              |                   |
-| old_price               | double       | NO   |     | NULL              |                   |
-| gender                  | varchar(255) | YES  |     | NULL              |                   |
-| quantity                | int          | YES  |     | NULL              |                   |
-| rating                  | double       | YES  |     | NULL              |                   |
-| brand                   | varchar(255) | YES  |     | NULL              |                   |
-| popularity              | varchar(255) | YES  |     | NULL              |                   |
-| color                   | varchar(255) | YES  |     | NULL              |                   |
-| description             | longtext     | YES  |     | NULL              |                   |
-| image1                  | varchar(255) | YES  |     | NULL              |                   |
-| image2                  | varchar(255) | YES  |     | NULL              |                   |
-| image3                  | varchar(255) | YES  |     | NULL              |                   |
-| discount                | double       | YES  |     | NULL              |                   |
-| highlights_shipping_fee | double       | YES  |     | NULL              |                   |
-| created_at              | timestamp    | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
-| category_name           | int          | NO   | MUL | NULL              |                   |
-+-------------------------+--------------+------+-----+-------------------+-------------------+
-18 rows in set (0.00 sec)
-
-mysql> desc reviews;
-+-------------+--------------+------+-----+-------------------+-------------------+
-| Field       | Type         | Null | Key | Default           | Extra             |
-+-------------+--------------+------+-----+-------------------+-------------------+
-| review_id   | int          | NO   | PRI | NULL              | auto_increment    |
-| user_id     | int          | NO   |     | NULL              |                   |
-| product_id  | int          | NO   | MUL | NULL              |                   |
-| rating      | int          | NO   |     | NULL              |                   |
-| review_text | varchar(255) | YES  |     | NULL              |                   |
-| created_at  | timestamp    | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
-+-------------+--------------+------+-----+-------------------+-------------------+
-6 rows in set (0.00 sec)
-
-mysql> select * from categories;
-+-------------+-------------+-----------+
-| category_id | name        | parent_id |
-+-------------+-------------+-----------+
-|           1 | Electronics |         1 |
-|           2 | Phones      |         1 |
-|           3 | Clothes     |         2 |
-|           4 | T-Shirt     |         2 |
-+-------------+-------------+-----------+
-4 rows in set (0.00 sec)
-
-mysql> select * from products;
-+------------+------------------+-----------+-----------+--------+----------+--------+------------+------------+-------+-----------------------------------------------------------+------------+------------+------------+----------+-------------------------+---------------------+---------------+
-| product_id | name             | new_price | old_price | gender | quantity | rating | brand      | popularity | color | description                                               | image1     | image2     | image3     | discount | highlights_shipping_fee | created_at          | category_name |
-+------------+------------------+-----------+-----------+--------+----------+--------+------------+------------+-------+-----------------------------------------------------------+------------+------------+------------+----------+-------------------------+---------------------+---------------+
-|          3 | DishWasher       |     99.99 |    149.99 | Unisex |       50 |    4.5 | SoundMagic | High       | Black | High-quality wireless headphones with noise cancellation. | image1_url | image2_url | image3_url |       10 |                       5 | 2025-02-11 22:12:05 |             1 |
-|          4 | Hawaii Floral    |    566.99 |    977.99 | Unisex |       50 |    4.5 | Hawaiii    | High       | Black | Best for all seasons                                      | image1_url | image2_url | image3_url |       10 |                       5 | 2025-02-11 22:28:37 |             3 |
-|          5 | T-shirt          |    566.99 |    977.99 | Unisex |       50 |    4.5 | Hawaiii    | High       | Black | Best for all seasons                                      | image1_url | image2_url | image3_url |       10 |                       5 | 2025-02-11 22:29:44 |             3 |
-|          6 | Headphones       |     99.99 |    149.99 | Unisex |       50 |    4.5 | SoundMagic | High       | Black | High-quality wireless headphones with noise cancellation. | image1_url | image2_url | image3_url |       10 |                       5 | 2025-02-12 12:06:21 |             1 |
-|          7 | Wired Headphones |     99.99 |    149.99 | Unisex |       50 |    4.5 | SoundMagic | High       | Black | High-quality wireless headphones with noise cancellation. | image1_url | image2_url | image3_url |       10 |                       5 | 2025-02-12 22:45:34 |             1 |
-+------------+------------------+-----------+-----------+--------+----------+--------+------------+------------+-------+-----------------------------------------------------------+------------+------------+------------+----------+-------------------------+---------------------+---------------+
-5 rows in set (0.00 sec)
-
-mysql> select * from reviews;
-+-----------+---------+------------+--------+----------------------------------+---------------------+
-| review_id | user_id | product_id | rating | review_text                      | created_at          |
-+-----------+---------+------------+--------+----------------------------------+---------------------+
-|         2 |       1 |          3 |      4 | Great product! Highly recommend. | 2025-02-11 22:46:41 |
-|         3 |       1 |          4 |      5 | Thank You for the service        | 2025-02-11 22:49:31 |
-+-----------+---------+------------+--------+----------------------------------+---------------------+
-2 rows in set (0.00 sec)
-
-
-create database product_service_db;
-use product_service_db;
- 
-select * from products;
-show tables;
-INSERT INTO categories (name, parent_id) VALUES
-('Electronics', NULL),
-('Clothing', NULL),
-('Books', NULL),
-('Home & Kitchen', NULL),
-('Sports', NULL),
-('Toys', NULL),
-('Beauty', NULL),
-('Automotive', NULL),
-('Garden', NULL),
-('Health', NULL);
- 
-INSERT INTO products (brand, color, description, discount, gender, highlights_shipping_fee, image1, image2, image3, name, new_price, old_price, popularity, quantity, rating, category_name) VALUES
-('BrandA', 'Red', 'Description1', 10.0, 'Unisex', 5.0, 'image1a.jpg', 'image2a.jpg', 'image3a.jpg', 'Product1', 90.0, 100.0, 'Popular', 50, 4.5, 1),
-('BrandB', 'Blue', 'Description2', 15.0, 'Male', 7.0, 'image1b.jpg', 'image2b.jpg', 'image3b.jpg', 'Product2', 85.0, 100.0, 'Popular', 30, 4.0, 2),
-('BrandC', 'Green', 'Description3', 20.0, 'Female', 6.0, 'image1c.jpg', 'image2c.jpg', 'image3c.jpg', 'Product3', 80.0, 100.0, 'Popular', 20, 4.8, 3),
-('BrandD', 'Yellow', 'Description4', 25.0, 'Unisex', 8.0, 'image1d.jpg', 'image2d.jpg', 'image3d.jpg', 'Product4', 75.0, 100.0, 'Popular', 40, 4.2, 4),
-('BrandE', 'Black', 'Description5', 30.0, 'Male', 9.0, 'image1e.jpg', 'image2e.jpg', 'image3e.jpg', 'Product5', 70.0, 100.0, 'Popular', 60, 4.6, 5),
-('BrandF', 'White', 'Description6', 35.0, 'Female', 10.0, 'image1f.jpg', 'image2f.jpg', 'image3f.jpg', 'Product6', 65.0, 100.0, 'Popular', 70, 4.7, 6),
-('BrandG', 'Purple', 'Description7', 40.0, 'Unisex', 11.0, 'image1g.jpg', 'image2g.jpg', 'image3g.jpg', 'Product7', 60.0, 100.0, 'Popular', 80, 4.3, 7),
-('BrandH', 'Pink', 'Description8', 45.0, 'Male', 12.0, 'image1h.jpg', 'image2h.jpg', 'image3h.jpg', 'Product8', 55.0, 100.0, 'Popular', 90, 4.1, 8),
-('BrandI', 'Orange', 'Description9', 50.0, 'Female', 13.0, 'image1i.jpg', 'image2i.jpg', 'image3i.jpg', 'Product9', 50.0, 100.0, 'Popular', 100, 4.4, 9),
-('BrandJ', 'Brown', 'Description10', 55.0, 'Unisex', 14.0, 'image1j.jpg', 'image2j.jpg', 'image3j.jpg', 'Product10', 45.0, 100.0, 'Popular', 110, 4.9, 10);
- 
- 
-INSERT INTO related_products (product_id, related_product_id) VALUES
-(1, 2),
-(1, 3),
-(2, 4),
-(2, 5),
-(3, 6),
-(3, 7),
-(4, 8),
-(4, 9),
-(5, 10),
-(5, 1);
- 
-INSERT INTO reviews (rating, review_text, user_id, product_id) VALUES
-(5, 'Great product!', 1, 1),
-(4, 'Good value for money.', 2, 2),
-(3, 'Average quality.', 3, 3),
-(5, 'Highly recommend!', 4, 4),
-(2, 'Not as expected.', 5, 5),
-(4, 'Satisfied with the purchase.', 6, 6),
-(5, 'Excellent product.', 7, 7),
-(3, 'Could be better.', 8, 8),
-(4, 'Worth the price.', 9, 9),
-(5, 'Very happy with this product.', 10, 10);
- 
-select * from products;
-select * from categories;
- 
-desc products;
-select * from related_products;
-
-
-create database genckart_cart_service;
-use genckart_cart_service;
-CREATE TABLE Cart (
-    cart_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    product_id INT NOT NULL,
-    quantity INT NOT NULL CHECK (quantity > 0),
-    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE cart_items (
-    cart_item_id INT AUTO_INCREMENT PRIMARY KEY,
-    cart_id INT NOT NULL,
-    user_id INT NOT NULL,
-    product_id INT NOT NULL,
-    quantity INT NOT NULL,
-    product_name VARCHAR(255) NOT NULL,
-    product_price DOUBLE NOT NULL,
-    FOREIGN KEY (cart_id) REFERENCES cart(cart_id)
-);
- 
-INSERT INTO Cart (user_id, product_id, quantity, added_at) VALUES
-(1, 1, 2, '2025-02-10 10:00:00'),
-(2, 2, 1, '2025-02-10 11:00:00'),
-(3, 3, 3, '2025-02-10 12:00:00'),
-(4, 4, 1, '2025-02-10 13:00:00'),
-(5, 5, 2, '2025-02-10 14:00:00'),
-(6, 6, 1, '2025-02-10 15:00:00'),
-(7, 7, 2, '2025-02-10 16:00:00'),
-(8, 8, 3, '2025-02-10 17:00:00'),
-(9, 9, 1, '2025-02-10 18:00:00'),
-(10, 10, 2, '2025-02-10 19:00:00'),
-(11, 11, 1, '2025-02-10 20:00:00'),
-(12, 12, 2, '2025-02-10 21:00:00'),
-(13, 13, 3, '2025-02-10 22:00:00'),
-(14, 14, 1, '2025-02-10 23:00:00'),
-(15, 15, 2, '2025-02-11 00:00:00'),
-(16, 16, 1, '2025-02-11 01:00:00'),
-(17, 17, 2, '2025-02-11 02:00:00'),
-(18, 18, 3, '2025-02-11 03:00:00'),
-(19, 19, 1, '2025-02-11 04:00:00'),
-(20, 20, 2, '2025-02-11 05:00:00');
- 
-INSERT INTO cart_items (cart_id, user_id, product_id, quantity, product_name, product_price) VALUES
-(1, 1, 1, 2, 'Product 1', 100.0),
-(2, 2, 2, 1, 'Product 2', 200.0),
-(3, 3, 3, 3, 'Product 3', 300.0),
-(4, 4, 4, 1, 'Product 4', 400.0),
-(5, 5, 5, 2, 'Product 5', 500.0),
-(6, 6, 6, 1, 'Product 6', 600.0),
-(7, 7, 7, 2, 'Product 7', 700.0),
-(8, 8, 8, 3, 'Product 8', 800.0),
-(9, 9, 9, 1, 'Product 9', 900.0),
-(10, 10, 10, 2, 'Product 10', 1000.0),
-(11, 11, 11, 1, 'Product 11', 1100.0),
-(12, 12, 12, 2, 'Product 12', 1200.0),
-(13, 13, 13, 3, 'Product 13', 1300.0),
-(14, 14, 14, 1, 'Product 14', 1400.0),
-(15, 15, 15, 2, 'Product 15', 1500.0),
-(16, 16, 16, 1, 'Product 16', 1600.0),
-(17, 17, 17, 2, 'Product 17', 1700.0),
-(18, 18, 18, 3, 'Product 18', 1800.0),
-(19, 19, 19, 1, 'Product 19', 1900.0),
-(20, 20, 20, 2, 'Product 20', 2000.0);
- 
-select * from cart;
-select * from cart_items;
-
-CREATE DATABASE userDb;
-
-
-
-USE userDb;
-
-
-
-CREATE TABLE users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    phone_number VARCHAR(25) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL
-);
-
-
-
-CREATE TABLE user_preferences (
-    preference_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    category_id INT,
-    brand VARCHAR(255),
-    min_price DOUBLE,
-    max_price DOUBLE,
-    gender VARCHAR(50),
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-);
-
-
-
-CREATE TABLE address (
-    address_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    street VARCHAR(255) NOT NULL,
-    city VARCHAR(255) NOT NULL,
-    state VARCHAR(255) NOT NULL,
-    postal_code VARCHAR(20) NOT NULL,
-    country VARCHAR(100) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-);
-
-
-
-
-
-drop table users;
-drop table address;
-drop table user_preferences;
-
-
-
-INSERT INTO users (name, email, phone_number, password_hash, role) VALUES
-('John Doe', 'john.doe@example.com', '1234567890', 'password123', 'USER'),
-('Jane Smith', 'jane.smith@example.com', '0987654321', 'password456', 'USER'),
-('Alice Johnson', 'alice.johnson@example.com', '1122334455', 'password789', 'USER'),
-('Bob Brown', 'bob.brown@example.com', '2233445566', 'password101', 'USER'),
-('Charlie Davis', 'charlie.davis@example.com', '3344556677', 'password202', 'USER'),
-('David Evans', 'david.evans@example.com', '4455667788', 'password303', 'USER'),
-('Eva Green', 'eva.green@example.com', '5566778899', 'password404', 'USER'),
-('Frank Harris', 'frank.harris@example.com', '6677889900', 'password505', 'USER'),
-('Grace Lee', 'grace.lee@example.com', '7788990011', 'password606', 'USER'),
-('Hank Miller', 'hank.miller@example.com', '8899001122', 'password707', 'USER'),
-('Ivy Nelson', 'ivy.nelson@example.com', '9900112233', 'password808', 'USER'),
-('Jack Owens', 'jack.owens@example.com', '0011223344', 'password909', 'USER'),
-('Kara Perez', 'kara.perez@example.com', '1122334456', 'password010', 'USER'),
-('Liam Quinn', 'liam.quinn@example.com', '2233445567', 'password111', 'USER'),
-('Mia Roberts', 'mia.roberts@example.com', '3344556678', 'password212', 'USER'),
-('Noah Scott', 'noah.scott@example.com', '4455667789', 'password313', 'USER'),
-('Olivia Turner', 'olivia.turner@example.com', '5566778890', 'password414', 'USER'),
-('Paul Walker', 'paul.walker@example.com', '6677889901', 'password515', 'USER'),
-('Quinn Young', 'quinn.young@example.com', '7788990012', 'password616', 'USER'),
-('Rachel Zane', 'rachel.zane@example.com', '8899001123', 'password717', 'USER');
-
-
-
-INSERT INTO user_preferences (user_id, category_id, brand, min_price, max_price, gender) VALUES
-(1, 2, 'Nike', 50, 200, 'Male'),
-(2, 3, 'Adidas', 100, 300, 'Female'),
-(3, 4, 'Puma', 150, 400, 'Male'),
-(4, 5, 'Reebok', 200, 500, 'Female'),
-(5, 6, 'Under Armour', 250, 600, 'Male'),
-(6, 7, 'New Balance', 300, 700, 'Female'),
-(7, 8, 'Asics', 350, 800, 'Male'),
-(8, 9, 'Skechers', 400, 900, 'Female'),
-(9, 10, 'Converse', 450, 1000, 'Male'),
-(10, 11, 'Vans', 500, 1100, 'Female'),
-(11, 12, 'Fila', 550, 1200, 'Male'),
-(12, 13, 'Brooks', 600, 1300, 'Female'),
-(13, 14, 'Saucony', 650, 1400, 'Male'),
-(14, 15, 'Mizuno', 700, 1500, 'Female'),
-(15, 16, 'Hoka One One', 750, 1600, 'Male'),
-(16, 17, 'Merrell', 800, 1700, 'Female'),
-(17, 18, 'Salomon', 850, 1800, 'Male'),
-(18, 19, 'Altra', 900, 1900, 'Female'),
-(19, 20, 'La Sportiva', 950, 2000, 'Male'),
-(20, 21, 'Inov-8', 1000, 2100, 'Female');
-
-
-
-INSERT INTO address (user_id, street, city, state, postal_code, country) VALUES
-(1, '123 Main St', 'Tambaram', 'TN', '600001', 'India'),
-(2, '456 Elm St', 'Chennai', 'TN', '600002', 'India'),
-(3, '789 Oak St', 'Madurai', 'TN', '600003', 'India'),
-(4, '101 Pine St', 'Coimbatore', 'TN', '600004', 'India'),
-(5, '202 Maple St', 'Salem', 'TN', '600005', 'India'),
-(6, '303 Birch St', 'Trichy', 'TN', '600006', 'India'),
-(7, '404 Cedar St', 'Erode', 'TN', '600007', 'India'),
-(8, '505 Walnut St', 'Vellore', 'TN', '600008', 'India'),
-(9, '606 Chestnut St', 'Tirunelveli', 'TN', '600009', 'India'),
-(10, '707 Ash St', 'Thanjavur', 'TN', '600010', 'India'),
-(11, '808 Redwood St', 'Kanchipuram', 'TN', '600011', 'India'),
-(12, '909 Sequoia St', 'Nagercoil', 'TN', '600012', 'India'),
-(13, '1010 Spruce St', 'Dindigul', 'TN', '600013', 'India'),
-(14, '1111 Fir St', 'Theni', 'TN', '600014', 'India'),
-(15, '1212 Hemlock St', 'Karur', 'TN', '600015', 'India'),
-(16, '1313 Cypress St', 'Nagapattinam', 'TN', '600016', 'India'),
-(17, '1414 Willow St', 'Pudukkottai', 'TN', '600017', 'India'),
-(18, '1515 Poplar St', 'Ramanathapuram', 'TN', '600018', 'India'),
-(19, '1616 Sycamore St', 'Sivaganga', 'TN', '600019', 'India'),
-(20, '1717 Magnolia St', 'Tiruvannamalai', 'TN', '600020', 'India');
