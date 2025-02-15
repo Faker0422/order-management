@@ -414,3 +414,353 @@ Description: Retrieves detailed information about a specific order.
 Input: Order ID
 
 Output: Detailed order information
+
+
+
+
+
+
+mysql> use product_service_db
+Database changed
+mysql> show tables;
++------------------------------+
+| Tables_in_product_service_db |
++------------------------------+
+| categories                   |
+| products                     |
+| related_products             |
+| reviews                      |
++------------------------------+
+4 rows in set (0.01 sec)
+
+mysql> desc categories;
++-------------+-------------+------+-----+---------+----------------+
+| Field       | Type        | Null | Key | Default | Extra          |
++-------------+-------------+------+-----+---------+----------------+
+| category_id | int         | NO   | PRI | NULL    | auto_increment |
+| name        | varchar(50) | NO   |     | NULL    |                |
+| parent_id   | int         | YES  |     | NULL    |                |
++-------------+-------------+------+-----+---------+----------------+
+3 rows in set (0.03 sec)
+
+mysql> desc products;
++-------------------------+--------------+------+-----+-------------------+-------------------+
+| Field                   | Type         | Null | Key | Default           | Extra             |
++-------------------------+--------------+------+-----+-------------------+-------------------+
+| product_id              | int          | NO   | PRI | NULL              | auto_increment    |
+| name                    | varchar(100) | NO   |     | NULL              |                   |
+| new_price               | double       | NO   |     | NULL              |                   |
+| old_price               | double       | NO   |     | NULL              |                   |
+| gender                  | varchar(255) | YES  |     | NULL              |                   |
+| quantity                | int          | YES  |     | NULL              |                   |
+| rating                  | double       | YES  |     | NULL              |                   |
+| brand                   | varchar(255) | YES  |     | NULL              |                   |
+| popularity              | varchar(255) | YES  |     | NULL              |                   |
+| color                   | varchar(255) | YES  |     | NULL              |                   |
+| description             | longtext     | YES  |     | NULL              |                   |
+| image1                  | varchar(255) | YES  |     | NULL              |                   |
+| image2                  | varchar(255) | YES  |     | NULL              |                   |
+| image3                  | varchar(255) | YES  |     | NULL              |                   |
+| discount                | double       | YES  |     | NULL              |                   |
+| highlights_shipping_fee | double       | YES  |     | NULL              |                   |
+| created_at              | timestamp    | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
+| category_name           | int          | NO   | MUL | NULL              |                   |
++-------------------------+--------------+------+-----+-------------------+-------------------+
+18 rows in set (0.00 sec)
+
+mysql> desc reviews;
++-------------+--------------+------+-----+-------------------+-------------------+
+| Field       | Type         | Null | Key | Default           | Extra             |
++-------------+--------------+------+-----+-------------------+-------------------+
+| review_id   | int          | NO   | PRI | NULL              | auto_increment    |
+| user_id     | int          | NO   |     | NULL              |                   |
+| product_id  | int          | NO   | MUL | NULL              |                   |
+| rating      | int          | NO   |     | NULL              |                   |
+| review_text | varchar(255) | YES  |     | NULL              |                   |
+| created_at  | timestamp    | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
++-------------+--------------+------+-----+-------------------+-------------------+
+6 rows in set (0.00 sec)
+
+mysql> select * from categories;
++-------------+-------------+-----------+
+| category_id | name        | parent_id |
++-------------+-------------+-----------+
+|           1 | Electronics |         1 |
+|           2 | Phones      |         1 |
+|           3 | Clothes     |         2 |
+|           4 | T-Shirt     |         2 |
++-------------+-------------+-----------+
+4 rows in set (0.00 sec)
+
+mysql> select * from products;
++------------+------------------+-----------+-----------+--------+----------+--------+------------+------------+-------+-----------------------------------------------------------+------------+------------+------------+----------+-------------------------+---------------------+---------------+
+| product_id | name             | new_price | old_price | gender | quantity | rating | brand      | popularity | color | description                                               | image1     | image2     | image3     | discount | highlights_shipping_fee | created_at          | category_name |
++------------+------------------+-----------+-----------+--------+----------+--------+------------+------------+-------+-----------------------------------------------------------+------------+------------+------------+----------+-------------------------+---------------------+---------------+
+|          3 | DishWasher       |     99.99 |    149.99 | Unisex |       50 |    4.5 | SoundMagic | High       | Black | High-quality wireless headphones with noise cancellation. | image1_url | image2_url | image3_url |       10 |                       5 | 2025-02-11 22:12:05 |             1 |
+|          4 | Hawaii Floral    |    566.99 |    977.99 | Unisex |       50 |    4.5 | Hawaiii    | High       | Black | Best for all seasons                                      | image1_url | image2_url | image3_url |       10 |                       5 | 2025-02-11 22:28:37 |             3 |
+|          5 | T-shirt          |    566.99 |    977.99 | Unisex |       50 |    4.5 | Hawaiii    | High       | Black | Best for all seasons                                      | image1_url | image2_url | image3_url |       10 |                       5 | 2025-02-11 22:29:44 |             3 |
+|          6 | Headphones       |     99.99 |    149.99 | Unisex |       50 |    4.5 | SoundMagic | High       | Black | High-quality wireless headphones with noise cancellation. | image1_url | image2_url | image3_url |       10 |                       5 | 2025-02-12 12:06:21 |             1 |
+|          7 | Wired Headphones |     99.99 |    149.99 | Unisex |       50 |    4.5 | SoundMagic | High       | Black | High-quality wireless headphones with noise cancellation. | image1_url | image2_url | image3_url |       10 |                       5 | 2025-02-12 22:45:34 |             1 |
++------------+------------------+-----------+-----------+--------+----------+--------+------------+------------+-------+-----------------------------------------------------------+------------+------------+------------+----------+-------------------------+---------------------+---------------+
+5 rows in set (0.00 sec)
+
+mysql> select * from reviews;
++-----------+---------+------------+--------+----------------------------------+---------------------+
+| review_id | user_id | product_id | rating | review_text                      | created_at          |
++-----------+---------+------------+--------+----------------------------------+---------------------+
+|         2 |       1 |          3 |      4 | Great product! Highly recommend. | 2025-02-11 22:46:41 |
+|         3 |       1 |          4 |      5 | Thank You for the service        | 2025-02-11 22:49:31 |
++-----------+---------+------------+--------+----------------------------------+---------------------+
+2 rows in set (0.00 sec)
+
+
+create database product_service_db;
+use product_service_db;
+ 
+select * from products;
+show tables;
+INSERT INTO categories (name, parent_id) VALUES
+('Electronics', NULL),
+('Clothing', NULL),
+('Books', NULL),
+('Home & Kitchen', NULL),
+('Sports', NULL),
+('Toys', NULL),
+('Beauty', NULL),
+('Automotive', NULL),
+('Garden', NULL),
+('Health', NULL);
+ 
+INSERT INTO products (brand, color, description, discount, gender, highlights_shipping_fee, image1, image2, image3, name, new_price, old_price, popularity, quantity, rating, category_name) VALUES
+('BrandA', 'Red', 'Description1', 10.0, 'Unisex', 5.0, 'image1a.jpg', 'image2a.jpg', 'image3a.jpg', 'Product1', 90.0, 100.0, 'Popular', 50, 4.5, 1),
+('BrandB', 'Blue', 'Description2', 15.0, 'Male', 7.0, 'image1b.jpg', 'image2b.jpg', 'image3b.jpg', 'Product2', 85.0, 100.0, 'Popular', 30, 4.0, 2),
+('BrandC', 'Green', 'Description3', 20.0, 'Female', 6.0, 'image1c.jpg', 'image2c.jpg', 'image3c.jpg', 'Product3', 80.0, 100.0, 'Popular', 20, 4.8, 3),
+('BrandD', 'Yellow', 'Description4', 25.0, 'Unisex', 8.0, 'image1d.jpg', 'image2d.jpg', 'image3d.jpg', 'Product4', 75.0, 100.0, 'Popular', 40, 4.2, 4),
+('BrandE', 'Black', 'Description5', 30.0, 'Male', 9.0, 'image1e.jpg', 'image2e.jpg', 'image3e.jpg', 'Product5', 70.0, 100.0, 'Popular', 60, 4.6, 5),
+('BrandF', 'White', 'Description6', 35.0, 'Female', 10.0, 'image1f.jpg', 'image2f.jpg', 'image3f.jpg', 'Product6', 65.0, 100.0, 'Popular', 70, 4.7, 6),
+('BrandG', 'Purple', 'Description7', 40.0, 'Unisex', 11.0, 'image1g.jpg', 'image2g.jpg', 'image3g.jpg', 'Product7', 60.0, 100.0, 'Popular', 80, 4.3, 7),
+('BrandH', 'Pink', 'Description8', 45.0, 'Male', 12.0, 'image1h.jpg', 'image2h.jpg', 'image3h.jpg', 'Product8', 55.0, 100.0, 'Popular', 90, 4.1, 8),
+('BrandI', 'Orange', 'Description9', 50.0, 'Female', 13.0, 'image1i.jpg', 'image2i.jpg', 'image3i.jpg', 'Product9', 50.0, 100.0, 'Popular', 100, 4.4, 9),
+('BrandJ', 'Brown', 'Description10', 55.0, 'Unisex', 14.0, 'image1j.jpg', 'image2j.jpg', 'image3j.jpg', 'Product10', 45.0, 100.0, 'Popular', 110, 4.9, 10);
+ 
+ 
+INSERT INTO related_products (product_id, related_product_id) VALUES
+(1, 2),
+(1, 3),
+(2, 4),
+(2, 5),
+(3, 6),
+(3, 7),
+(4, 8),
+(4, 9),
+(5, 10),
+(5, 1);
+ 
+INSERT INTO reviews (rating, review_text, user_id, product_id) VALUES
+(5, 'Great product!', 1, 1),
+(4, 'Good value for money.', 2, 2),
+(3, 'Average quality.', 3, 3),
+(5, 'Highly recommend!', 4, 4),
+(2, 'Not as expected.', 5, 5),
+(4, 'Satisfied with the purchase.', 6, 6),
+(5, 'Excellent product.', 7, 7),
+(3, 'Could be better.', 8, 8),
+(4, 'Worth the price.', 9, 9),
+(5, 'Very happy with this product.', 10, 10);
+ 
+select * from products;
+select * from categories;
+ 
+desc products;
+select * from related_products;
+
+
+create database genckart_cart_service;
+use genckart_cart_service;
+CREATE TABLE Cart (
+    cart_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE cart_items (
+    cart_item_id INT AUTO_INCREMENT PRIMARY KEY,
+    cart_id INT NOT NULL,
+    user_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    product_name VARCHAR(255) NOT NULL,
+    product_price DOUBLE NOT NULL,
+    FOREIGN KEY (cart_id) REFERENCES cart(cart_id)
+);
+ 
+INSERT INTO Cart (user_id, product_id, quantity, added_at) VALUES
+(1, 1, 2, '2025-02-10 10:00:00'),
+(2, 2, 1, '2025-02-10 11:00:00'),
+(3, 3, 3, '2025-02-10 12:00:00'),
+(4, 4, 1, '2025-02-10 13:00:00'),
+(5, 5, 2, '2025-02-10 14:00:00'),
+(6, 6, 1, '2025-02-10 15:00:00'),
+(7, 7, 2, '2025-02-10 16:00:00'),
+(8, 8, 3, '2025-02-10 17:00:00'),
+(9, 9, 1, '2025-02-10 18:00:00'),
+(10, 10, 2, '2025-02-10 19:00:00'),
+(11, 11, 1, '2025-02-10 20:00:00'),
+(12, 12, 2, '2025-02-10 21:00:00'),
+(13, 13, 3, '2025-02-10 22:00:00'),
+(14, 14, 1, '2025-02-10 23:00:00'),
+(15, 15, 2, '2025-02-11 00:00:00'),
+(16, 16, 1, '2025-02-11 01:00:00'),
+(17, 17, 2, '2025-02-11 02:00:00'),
+(18, 18, 3, '2025-02-11 03:00:00'),
+(19, 19, 1, '2025-02-11 04:00:00'),
+(20, 20, 2, '2025-02-11 05:00:00');
+ 
+INSERT INTO cart_items (cart_id, user_id, product_id, quantity, product_name, product_price) VALUES
+(1, 1, 1, 2, 'Product 1', 100.0),
+(2, 2, 2, 1, 'Product 2', 200.0),
+(3, 3, 3, 3, 'Product 3', 300.0),
+(4, 4, 4, 1, 'Product 4', 400.0),
+(5, 5, 5, 2, 'Product 5', 500.0),
+(6, 6, 6, 1, 'Product 6', 600.0),
+(7, 7, 7, 2, 'Product 7', 700.0),
+(8, 8, 8, 3, 'Product 8', 800.0),
+(9, 9, 9, 1, 'Product 9', 900.0),
+(10, 10, 10, 2, 'Product 10', 1000.0),
+(11, 11, 11, 1, 'Product 11', 1100.0),
+(12, 12, 12, 2, 'Product 12', 1200.0),
+(13, 13, 13, 3, 'Product 13', 1300.0),
+(14, 14, 14, 1, 'Product 14', 1400.0),
+(15, 15, 15, 2, 'Product 15', 1500.0),
+(16, 16, 16, 1, 'Product 16', 1600.0),
+(17, 17, 17, 2, 'Product 17', 1700.0),
+(18, 18, 18, 3, 'Product 18', 1800.0),
+(19, 19, 19, 1, 'Product 19', 1900.0),
+(20, 20, 20, 2, 'Product 20', 2000.0);
+ 
+select * from cart;
+select * from cart_items;
+
+CREATE DATABASE userDb;
+
+
+
+USE userDb;
+
+
+
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone_number VARCHAR(25) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL
+);
+
+
+
+CREATE TABLE user_preferences (
+    preference_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    category_id INT,
+    brand VARCHAR(255),
+    min_price DOUBLE,
+    max_price DOUBLE,
+    gender VARCHAR(50),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+
+
+CREATE TABLE address (
+    address_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    street VARCHAR(255) NOT NULL,
+    city VARCHAR(255) NOT NULL,
+    state VARCHAR(255) NOT NULL,
+    postal_code VARCHAR(20) NOT NULL,
+    country VARCHAR(100) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+
+
+
+
+drop table users;
+drop table address;
+drop table user_preferences;
+
+
+
+INSERT INTO users (name, email, phone_number, password_hash, role) VALUES
+('John Doe', 'john.doe@example.com', '1234567890', 'password123', 'USER'),
+('Jane Smith', 'jane.smith@example.com', '0987654321', 'password456', 'USER'),
+('Alice Johnson', 'alice.johnson@example.com', '1122334455', 'password789', 'USER'),
+('Bob Brown', 'bob.brown@example.com', '2233445566', 'password101', 'USER'),
+('Charlie Davis', 'charlie.davis@example.com', '3344556677', 'password202', 'USER'),
+('David Evans', 'david.evans@example.com', '4455667788', 'password303', 'USER'),
+('Eva Green', 'eva.green@example.com', '5566778899', 'password404', 'USER'),
+('Frank Harris', 'frank.harris@example.com', '6677889900', 'password505', 'USER'),
+('Grace Lee', 'grace.lee@example.com', '7788990011', 'password606', 'USER'),
+('Hank Miller', 'hank.miller@example.com', '8899001122', 'password707', 'USER'),
+('Ivy Nelson', 'ivy.nelson@example.com', '9900112233', 'password808', 'USER'),
+('Jack Owens', 'jack.owens@example.com', '0011223344', 'password909', 'USER'),
+('Kara Perez', 'kara.perez@example.com', '1122334456', 'password010', 'USER'),
+('Liam Quinn', 'liam.quinn@example.com', '2233445567', 'password111', 'USER'),
+('Mia Roberts', 'mia.roberts@example.com', '3344556678', 'password212', 'USER'),
+('Noah Scott', 'noah.scott@example.com', '4455667789', 'password313', 'USER'),
+('Olivia Turner', 'olivia.turner@example.com', '5566778890', 'password414', 'USER'),
+('Paul Walker', 'paul.walker@example.com', '6677889901', 'password515', 'USER'),
+('Quinn Young', 'quinn.young@example.com', '7788990012', 'password616', 'USER'),
+('Rachel Zane', 'rachel.zane@example.com', '8899001123', 'password717', 'USER');
+
+
+
+INSERT INTO user_preferences (user_id, category_id, brand, min_price, max_price, gender) VALUES
+(1, 2, 'Nike', 50, 200, 'Male'),
+(2, 3, 'Adidas', 100, 300, 'Female'),
+(3, 4, 'Puma', 150, 400, 'Male'),
+(4, 5, 'Reebok', 200, 500, 'Female'),
+(5, 6, 'Under Armour', 250, 600, 'Male'),
+(6, 7, 'New Balance', 300, 700, 'Female'),
+(7, 8, 'Asics', 350, 800, 'Male'),
+(8, 9, 'Skechers', 400, 900, 'Female'),
+(9, 10, 'Converse', 450, 1000, 'Male'),
+(10, 11, 'Vans', 500, 1100, 'Female'),
+(11, 12, 'Fila', 550, 1200, 'Male'),
+(12, 13, 'Brooks', 600, 1300, 'Female'),
+(13, 14, 'Saucony', 650, 1400, 'Male'),
+(14, 15, 'Mizuno', 700, 1500, 'Female'),
+(15, 16, 'Hoka One One', 750, 1600, 'Male'),
+(16, 17, 'Merrell', 800, 1700, 'Female'),
+(17, 18, 'Salomon', 850, 1800, 'Male'),
+(18, 19, 'Altra', 900, 1900, 'Female'),
+(19, 20, 'La Sportiva', 950, 2000, 'Male'),
+(20, 21, 'Inov-8', 1000, 2100, 'Female');
+
+
+
+INSERT INTO address (user_id, street, city, state, postal_code, country) VALUES
+(1, '123 Main St', 'Tambaram', 'TN', '600001', 'India'),
+(2, '456 Elm St', 'Chennai', 'TN', '600002', 'India'),
+(3, '789 Oak St', 'Madurai', 'TN', '600003', 'India'),
+(4, '101 Pine St', 'Coimbatore', 'TN', '600004', 'India'),
+(5, '202 Maple St', 'Salem', 'TN', '600005', 'India'),
+(6, '303 Birch St', 'Trichy', 'TN', '600006', 'India'),
+(7, '404 Cedar St', 'Erode', 'TN', '600007', 'India'),
+(8, '505 Walnut St', 'Vellore', 'TN', '600008', 'India'),
+(9, '606 Chestnut St', 'Tirunelveli', 'TN', '600009', 'India'),
+(10, '707 Ash St', 'Thanjavur', 'TN', '600010', 'India'),
+(11, '808 Redwood St', 'Kanchipuram', 'TN', '600011', 'India'),
+(12, '909 Sequoia St', 'Nagercoil', 'TN', '600012', 'India'),
+(13, '1010 Spruce St', 'Dindigul', 'TN', '600013', 'India'),
+(14, '1111 Fir St', 'Theni', 'TN', '600014', 'India'),
+(15, '1212 Hemlock St', 'Karur', 'TN', '600015', 'India'),
+(16, '1313 Cypress St', 'Nagapattinam', 'TN', '600016', 'India'),
+(17, '1414 Willow St', 'Pudukkottai', 'TN', '600017', 'India'),
+(18, '1515 Poplar St', 'Ramanathapuram', 'TN', '600018', 'India'),
+(19, '1616 Sycamore St', 'Sivaganga', 'TN', '600019', 'India'),
+(20, '1717 Magnolia St', 'Tiruvannamalai', 'TN', '600020', 'India');
