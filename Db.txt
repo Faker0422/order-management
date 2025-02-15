@@ -1,3 +1,7 @@
+org.hibernate.query.IllegalSelectQueryException: Expecting a SELECT Query [org.hibernate.query.sqm.tree.select.SqmSelectStatement], but found org.hibernate.query.sqm.tree.delete.SqmDeleteStatement [DELETE FROM OrderHistory oh WHERE oh.order.orderId = :orderId]
+
+
+
 CREATE DATABASE productDb;
 
 USE productDb;
