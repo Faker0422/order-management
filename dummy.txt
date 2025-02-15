@@ -1,3 +1,7 @@
+2025-02-16T01:04:35.380+05:30  WARN 27372 --- [order-service] [nio-8766-exec-5] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotReadableException: JSON parse error: Cannot deserialize value of type `java.lang.Integer` from Object value (token `JsonToken.START_OBJECT`)]
+
+
+
 {
   "orderId": 1001,
   "userId": 1,
