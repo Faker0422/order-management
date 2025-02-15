@@ -25,8 +25,9 @@ public OrderDTO placeOrderFromCart(Integer userId) {
     order.setDeliveryAddressId(user.getAddressId());
     order.setDeliveryDate(LocalDate.now().plusDays(7));
 
-    // Flatten cart items and calculate total amount
-    double totalAmount = 0.0;
+    // Use AtomicReference to store total amount (to avoid lambda variable issue)
+    AtomicReference<Double> totalAmount = new AtomicReference<>(0.0);
+
     List<OrderItem> orderItems = cartList.stream()
             .flatMap(cartDTO -> cartDTO.getCartItems().stream()) // Extract cart items
             .map(cartItem -> {
@@ -43,13 +44,15 @@ public OrderDTO placeOrderFromCart(Integer userId) {
                     double discountPercentage = product.getDiscount();
                     double discountedPrice = productPrice - (productPrice * discountPercentage / 100);
                     double finalPrice = discountedPrice * cartItem.getQuantity();
-                    totalAmount += finalPrice;
+                    
+                    // Update total amount using AtomicReference
+                    totalAmount.updateAndGet(v -> v + finalPrice);
                 }
                 return orderItem;
             }).collect(Collectors.toList());
 
     // Set total amount before saving
-    order.setTotalAmount(totalAmount);
+    order.setTotalAmount(totalAmount.get());
 
     Order savedOrder = orderRepository.save(order);
     orderItems.forEach(item -> item.setOrder(savedOrder));
