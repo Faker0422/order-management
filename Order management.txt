@@ -39,42 +39,45 @@ CREATE TABLE order_history (
     status_changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES orders(order_id)
 );
-INSERT INTO Orders (user_id, total_amount, order_status, delivery_address_id, delivery_date) VALUES
-(1, 250.50, 'PENDING', 101, '2025-02-20'),
-(2, 120.99, 'SHIPPED', 102, '2025-02-22'),
-(3, 89.75, 'DELIVERED', 103, '2025-02-18'),
-(4, 199.99, 'PENDING', 104, '2025-02-25'),
-(5, 300.00, 'CANCELLED', 105, '2025-02-19'),
-(6, 450.25, 'SHIPPED', 106, '2025-02-21'),
-(7, 75.89, 'DELIVERED', 107, '2025-02-17'),
-(8, 150.00, 'PENDING', 108, '2025-02-23'),
-(9, 520.45, 'SHIPPED', 109, '2025-02-26'),
-(10, 99.99, 'DELIVERED', 110, '2025-02-15');
+INSERT INTO orders (user_id, total_amount, order_status, delivery_address_id, delivery_date)
+VALUES
+(1, 900.0, 'PENDING', 101, '2025-02-22'),
+(2, 1800.0, 'CONFIRMED', 102, '2025-02-23'),
+(3, 2700.0, 'SHIPPED', 103, '2025-02-24'),
+(4, 3600.0, 'DELIVERED', 104, '2025-02-25'),
+(5, 4500.0, 'PENDING', 105, '2025-02-26'),
+(6, 5400.0, 'CONFIRMED', 106, '2025-02-27'),
+(7, 6300.0, 'SHIPPED', 107, '2025-02-28'),
+(8, 7200.0, 'DELIVERED', 108, '2025-03-01'),
+(9, 8100.0, 'PENDING', 109, '2025-03-02'),
+(10, 9000.0, 'CONFIRMED', 110, '2025-03-03');
 
-INSERT INTO OrderItems (order_id, product_id, quantity, price) VALUES
-(1, 201, 2, 125.25),
-(1, 202, 1, 125.25),
-(2, 203, 3, 40.33),
-(3, 204, 1, 89.75),
-(4, 205, 2, 99.99),
-(5, 206, 5, 60.00),
-(6, 207, 1, 450.25),
-(7, 208, 3, 25.29),
-(8, 209, 2, 75.00),
-(9, 210, 4, 130.11),
-(10, 211, 1, 99.99);
 
-INSERT INTO OrderHistory (order_id, user_id, order_status) VALUES
+INSERT INTO order_items (order_id, product_id, quantity, price, discount, final_price)
+VALUES
+(1, 1, 2, 100.0, 10.0, 180.0), -- (100 - 10%) * 2
+(1, 2, 3, 200.0, 15.0, 510.0), -- (200 - 15%) * 3
+(2, 3, 1, 300.0, 20.0, 240.0), -- (300 - 20%) * 1
+(2, 4, 4, 400.0, 25.0, 1200.0), -- (400 - 25%) * 4
+(3, 5, 2, 500.0, 30.0, 700.0), -- (500 - 30%) * 2
+(3, 6, 3, 600.0, 35.0, 1170.0), -- (600 - 35%) * 3
+(4, 7, 1, 700.0, 40.0, 420.0), -- (700 - 40%) * 1
+(4, 8, 5, 800.0, 45.0, 2200.0), -- (800 - 45%) * 5
+(5, 9, 2, 900.0, 50.0, 900.0), -- (900 - 50%) * 2
+(5, 10, 3, 1000.0, 55.0, 1350.0); -- (1000 - 55%) * 3
+
+INSERT INTO order_history (order_id, user_id, order_status)
+VALUES
 (1, 1, 'PENDING'),
-(2, 2, 'SHIPPED'),
-(3, 3, 'DELIVERED'),
-(4, 4, 'PENDING'),
-(5, 5, 'CANCELLED'),
-(6, 6, 'SHIPPED'),
-(7, 7, 'DELIVERED'),
-(8, 8, 'PENDING'),
-(9, 9, 'SHIPPED'),
-(10, 10, 'DELIVERED');
+(2, 2, 'CONFIRMED'),
+(3, 3, 'SHIPPED'),
+(4, 4, 'DELIVERED'),
+(5, 5, 'PENDING'),
+(6, 6, 'CONFIRMED'),
+(7, 7, 'SHIPPED'),
+(8, 8, 'DELIVERED'),
+(9, 9, 'PENDING'),
+(10, 10, 'CONFIRMED');
 
 
 package com.genckart.entity;
