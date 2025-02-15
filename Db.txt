@@ -1,88 +1,323 @@
-org.hibernate.query.IllegalSelectQueryException: Expecting a SELECT Query [org.hibernate.query.sqm.tree.select.SqmSelectStatement], but found org.hibernate.query.sqm.tree.delete.SqmDeleteStatement [DELETE FROM OrderHistory oh WHERE oh.order.orderId = :orderId]
-	at org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement(SqmUtil.java:140) ~[hibernate-core-6.6.5.Final.jar:6.6.5.Final]
-	at org.hibernate.query.sqm.internal.QuerySqmImpl.verifySelect(QuerySqmImpl.java:348) ~[hibernate-core-6.6.5.Final.jar:6.6.5.Final]
-	at org.hibernate.query.sqm.internal.QuerySqmImpl.doList(QuerySqmImpl.java:372) ~[hibernate-core-6.6.5.Final.jar:6.6.5.Final]
-	at org.hibernate.query.spi.AbstractSelectionQuery.list(AbstractSelectionQuery.java:143) ~[hibernate-core-6.6.5.Final.jar:6.6.5.Final]
-	at org.hibernate.query.Query.getResultList(Query.java:120) ~[hibernate-core-6.6.5.Final.jar:6.6.5.Final]
-	at org.springframework.data.jpa.repository.query.JpaQueryExecution$CollectionExecution.doExecute(JpaQueryExecution.java:130) ~[spring-data-jpa-3.4.2.jar:3.4.2]
-	at org.springframework.data.jpa.repository.query.JpaQueryExecution.execute(JpaQueryExecution.java:93) ~[spring-data-jpa-3.4.2.jar:3.4.2]
-	at org.springframework.data.jpa.repository.query.AbstractJpaQuery.doExecute(AbstractJpaQuery.java:152) ~[spring-data-jpa-3.4.2.jar:3.4.2]
-	at org.springframework.data.jpa.repository.query.AbstractJpaQuery.execute(AbstractJpaQuery.java:140) ~[spring-data-jpa-3.4.2.jar:3.4.2]
-	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:170) ~[spring-data-commons-3.4.2.jar:3.4.2]
-	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158) ~[spring-data-commons-3.4.2.jar:3.4.2]
-	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:170) ~[spring-data-commons-3.4.2.jar:3.4.2]
-	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:149) ~[spring-data-commons-3.4.2.jar:3.4.2]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.2.2.jar:6.2.2]
-	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:69) ~[spring-data-commons-3.4.2.jar:3.4.2]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.2.2.jar:6.2.2]
-	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:380) ~[spring-tx-6.2.2.jar:6.2.2]
-	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119) ~[spring-tx-6.2.2.jar:6.2.2]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.2.2.jar:6.2.2]
-	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:138) ~[spring-tx-6.2.2.jar:6.2.2]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.2.2.jar:6.2.2]
-	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:136) ~[spring-data-jpa-3.4.2.jar:3.4.2]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.2.2.jar:6.2.2]
-	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:223) ~[spring-aop-6.2.2.jar:6.2.2]
-	at jdk.proxy2/jdk.proxy2.$Proxy167.findByOrderId(Unknown Source) ~[na:na]
-	at com.genckart.service.Impl.OrderServiceImpl.getOrderDetails(OrderServiceImpl.java:163) ~[classes/:na]
-	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
-	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
-	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-6.2.2.jar:6.2.2]
-	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:723) ~[spring-aop-6.2.2.jar:6.2.2]
-	at com.genckart.service.Impl.OrderServiceImpl$$SpringCGLIB$$0.getOrderDetails(<generated>) ~[classes/:na]
-	at com.genckart.controller.OrderController.getOrderDetails(OrderController.java:42) ~[classes/:na]
-	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
-	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
-	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:257) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:986) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:891) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1088) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:978) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564) ~[tomcat-embed-core-10.1.34.jar:6.0]
-	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658) ~[tomcat-embed-core-10.1.34.jar:6.0]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51) ~[tomcat-embed-websocket-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:114) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at java.base/java.lang.Thread.run(Thread.java:1570) ~[na:na]
+package com.genckart.repository;
+
+import com.genckart.entity.OrderHistory;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Repository
+public interface OrderHistoryRepository extends JpaRepository<OrderHistory, Integer> {
+
+    @Query("DELETE FROM OrderHistory oh WHERE oh.order.orderId = :orderId")
+    List<OrderHistory> findByOrderId(Integer orderId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM OrderHistory oh WHERE oh.order.orderId = :orderId")
+    void deleteByOrder_OrderId(@Param("orderId") Integer OrderId);
+
+}
+
+package com.genckart.repository;
+
+import com.genckart.entity.OrderItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Repository
+public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
+
+    @Query("SELECT oi FROM OrderItem oi WHERE oi.order.orderId = :orderId")
+    List<OrderItem> findByOrderId(Integer orderId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM OrderItem oi WHERE oi.order.orderId = :orderId")
+    void deleteByOrder_OrderId(@Param("orderId") Integer OrderId);
+}
+
+
+
+package com.genckart.service.Impl;
+
+import com.genckart.clients.CartClient;
+import com.genckart.clients.ProductClient;
+import com.genckart.clients.UserClient;
+import com.genckart.dto.*;
+import com.genckart.entity.*;
+import com.genckart.exception.OrderNotFoundException;
+import com.genckart.repository.OrderHistoryRepository;
+import com.genckart.repository.OrderItemRepository;
+import com.genckart.repository.OrderRepository;
+import com.genckart.service.OrderService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class OrderServiceImpl implements OrderService {
+
+    private final OrderRepository orderRepository;
+
+    private final OrderItemRepository orderItemRepository;
+
+    private final OrderHistoryRepository orderHistoryRepository;
+
+    private final UserClient userClient;
+
+    private final ProductClient productClient;
+
+    private final CartClient cartClient;
+
+    @Override
+    public OrderDTO placeOrderFromCart(Integer userId) {
+        UserDTO user = userClient.getUserById(userId);
+        CartDTO cart = cartClient.getCartByUserId(userId);
+
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setOrderStatus("PENDING");
+        order.setDeliveryAddressId(user.getAddressId());
+        order.setDeliveryDate(LocalDate.now().plusDays(7));
+
+        List<OrderItem> orderItems = cart.getCartItems().stream()
+                .map(item -> {
+                    ProductDTO product = productClient.getProductById(item.getProductId());
+                    double productPrice = product.getNewPrice();
+                    double discountPercentage = product.getDiscount(); // Discount in percentage
+                    double discountedPrice = productPrice - (productPrice * discountPercentage / 100);
+                    double finalPrice = discountedPrice * item.getQuantity();
+
+                    OrderItem orderItem = new OrderItem();
+                    orderItem.setOrder(order);
+                    orderItem.setProductId(item.getProductId());
+                    orderItem.setQuantity(item.getQuantity());
+                    orderItem.setPrice(productPrice); // Original price
+                    orderItem.setDiscount(discountPercentage); // Discount percentage
+                    orderItem.setFinalPrice(finalPrice); // Computed final price
+
+                    return orderItem;
+                }).collect(Collectors.toList());
+
+        // Calculate total amount based on discounted prices
+        double totalAmount = orderItems.stream().mapToDouble(OrderItem::getFinalPrice).sum();
+        order.setTotalAmount(totalAmount);
+
+        Order savedOrder = orderRepository.save(order);
+        orderItems.forEach(item -> item.setOrder(savedOrder)); // Set saved order for items
+        orderItemRepository.saveAll(orderItems);
+
+        // Save order history
+        OrderHistory orderHistory = new OrderHistory();
+        orderHistory.getOrder().setOrderId(savedOrder.getOrderId());
+        orderHistory.setUserId(userId);
+        orderHistory.setOrderStatus("PENDING");
+        orderHistoryRepository.save(orderHistory);
+
+        return convertToDTO(savedOrder);
+    }
+
+    public OrderDTO placeOrderFromProductDetail(Integer userId, Integer productId, Integer quantity) {
+        UserDTO user = userClient.getUserById(userId);
+        ProductDTO product = productClient.getProductById(productId);
+
+        double productPrice = product.getNewPrice();
+        double discountPercentage = product.getDiscount(); // Discount stored in percentage
+        double discountedPrice = productPrice - (productPrice * discountPercentage / 100);
+        double finalPrice = discountedPrice * quantity;
+
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setTotalAmount(finalPrice);
+        order.setOrderStatus("PENDING");
+        order.setDeliveryAddressId(user.getAddressId());
+        order.setDeliveryDate(LocalDate.now().plusDays(7));
+
+        Order savedOrder = orderRepository.save(order);
+
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrder(savedOrder);
+        orderItem.setProductId(productId);
+        orderItem.setQuantity(quantity);
+        orderItem.setPrice(productPrice); // Original price
+        orderItem.setDiscount(discountPercentage); // Discount in percentage
+        orderItem.setFinalPrice(finalPrice); // Computed final price
+        orderItemRepository.save(orderItem);
+
+        OrderHistory orderHistory = new OrderHistory();
+        orderHistory.setOrder(savedOrder);
+        orderHistory.setUserId(userId);
+        orderHistory.setOrderStatus("PENDING");
+        orderHistoryRepository.save(orderHistory);
+
+        return convertToDTO(savedOrder);
+    }
+
+    @Transactional
+    public void updateOrderStatus(Integer orderId, String newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        order.setOrderStatus(newStatus);
+        orderRepository.save(order);
+
+        OrderHistory orderHistory = new OrderHistory();
+        order.setOrderId(orderId);
+        orderHistory.setOrder(order);
+        orderHistory.setUserId(order.getUserId());
+        orderHistory.setOrderStatus(newStatus);
+        orderHistoryRepository.save(orderHistory);
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void checkAndUpdateOrderStatus() {
+        List<Order> activeOrders = orderRepository.findByOrderStatusNot("DELIVERED");
+        for (Order order : activeOrders) {
+            if (LocalDate.now().isAfter(order.getDeliveryDate().minusDays(2)) && order.getOrderStatus().equals("PENDING")) {
+                updateOrderStatus(order.getOrderId(), "IN_PROGRESS");
+            } else if (LocalDate.now().isAfter(order.getDeliveryDate()) && order.getOrderStatus().equals("IN_PROGRESS")) {
+                updateOrderStatus(order.getOrderId(), "DELIVERED");
+            }
+        }
+    }
+
+
+    public List<OrderDTO> getOrderHistory(Integer userId) {
+        List<Order> orders = orderRepository.findByUserId(userId);
+        if (orders.isEmpty()) {
+            throw new OrderNotFoundException("No orders found for user ID: " + userId);
+        }
+        return orders.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    public OrderDTO getOrderDetails(Integer orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+        List<OrderHistory> orderHistory = orderHistoryRepository.findByOrderId(orderId);
+
+        OrderDTO orderDTO = convertToDTO(order);
+        orderDTO.setOrderItems(orderItems.stream()
+                .map(this::convertToOrderItemDTO)
+                .collect(Collectors.toList()));
+        orderDTO.setOrderHistory(orderHistory.stream()
+                .map(this::convertToOrderHistoryDTO)
+                .collect(Collectors.toList()));
+
+        return orderDTO;
+    }
+
+    public void deleteOrder(Integer orderId) {
+        if (!orderRepository.existsById(orderId)) {
+            throw new OrderNotFoundException("Order not found with ID: " + orderId);
+        }
+
+        orderItemRepository.deleteByOrder_OrderId(orderId);
+        orderHistoryRepository.deleteByOrder_OrderId(orderId);
+        orderRepository.deleteById(orderId);
+    }
+
+    private OrderDTO convertToDTO(Order order) {
+        OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setOrderId(order.getOrderId());
+        orderDTO.setUserId(order.getUserId());
+        orderDTO.setTotalAmount(order.getTotalAmount());
+        orderDTO.setOrderStatus(order.getOrderStatus());
+        orderDTO.setDeliveryAddressId(order.getDeliveryAddressId());
+        orderDTO.setDeliveryDate(order.getDeliveryDate());
+        orderDTO.setCreatedAt(order.getCreatedAt());
+        return orderDTO;
+    }
+
+    private OrderItemDTO convertToOrderItemDTO(OrderItem orderItem) {
+        OrderItemDTO orderItemDTO = new OrderItemDTO();
+        orderItemDTO.setProductId(orderItem.getProductId());
+        orderItemDTO.setQuantity(orderItem.getQuantity());
+        orderItemDTO.setPrice(orderItem.getPrice());
+        return orderItemDTO;
+    }
+
+    private OrderHistoryDTO convertToOrderHistoryDTO(OrderHistory orderHistory) {
+        OrderHistoryDTO orderHistoryDTO = new OrderHistoryDTO();
+        orderHistoryDTO.setOrderHistoryId(orderHistory.getOrderHistoryId());
+        orderHistoryDTO.setOrderId(orderHistory.getOrder().getOrderId());
+        orderHistoryDTO.setUserId(orderHistory.getUserId());
+        orderHistoryDTO.setOrderStatus(orderHistory.getOrderStatus());
+        return orderHistoryDTO;
+    }
+}
+
+
+package com.genckart.controller;
+
+import com.genckart.dto.OrderDTO;
+import com.genckart.service.OrderService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/orders")
+public class OrderController {
+
+    @Autowired
+    private OrderService orderService;
+
+    @PostMapping("/cart/{userId}")
+    public ResponseEntity<OrderDTO> placeOrderFromCart(@PathVariable Integer userId) {
+        OrderDTO savedOrder = orderService.placeOrderFromCart(userId);
+        return new ResponseEntity<>(savedOrder, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/product/{userId}/{productId}/{quantity}")
+    public ResponseEntity<OrderDTO> placeOrderFromProductDetail(
+            @PathVariable Integer userId,
+            @PathVariable Integer productId,
+            @PathVariable Integer quantity) {
+        OrderDTO savedOrder = orderService.placeOrderFromProductDetail(userId, productId, quantity);
+        return new ResponseEntity<>(savedOrder, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/history/{userId}")
+    public ResponseEntity<List<OrderDTO>> getOrderHistory(@PathVariable Integer userId) {
+        List<OrderDTO> orders = orderService.getOrderHistory(userId);
+        return new ResponseEntity<>(orders, HttpStatus.OK);
+    }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderDTO> getOrderDetails(@PathVariable Integer orderId) {
+        OrderDTO order = orderService.getOrderDetails(orderId);
+        return new ResponseEntity<>(order, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/delete/{orderId}")
+    public ResponseEntity<String> deleteOrder(@PathVariable Integer orderId){
+        orderService.deleteOrder(orderId);
+        return ResponseEntity.ok("Order deleted successfully");
+    }
+}
+
+
 
 
 
