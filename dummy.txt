@@ -1,3 +1,8 @@
+Required type:
+Timestamp
+Provided:
+String
+
 package com.genckart.service;
 
 import com.genckart.dto.*;
