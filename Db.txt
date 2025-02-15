@@ -1,3 +1,293 @@
+private OrderItemDTO convertToOrderItemDTO(OrderItem orderItem) {
+        OrderItemDTO orderItemDTO = new OrderItemDTO();
+        orderItemDTO.setOrderItemId(orderItem.getOrderItemId());
+        orderItemDTO.setProductId(orderItem.getProductId());
+        orderItemDTO.setQuantity(orderItem.getQuantity());
+
+        // Extract ProductDTO from ResponseEntity
+        ResponseEntity<ProductDTO> productResponse = productClient.getProductById(orderItem.getProductId());
+        if (productResponse.hasBody()) {
+            ProductDTO product = productResponse.getBody();
+            orderItemDTO.setProductName(product.getName());
+            orderItemDTO.setDiscount(product.getDiscount());
+            orderItemDTO.setFinalPrice(product.getNewPrice());
+        } else {
+            orderItemDTO.setProductName("Unknown Product");
+            orderItemDTO.setPrice(0.0);
+            orderItemDTO.setDiscount(0.0);
+            orderItemDTO.setFinalPrice(0.0);
+        }
+        return orderItemDTO;
+    }
+
+
+package com.genckart.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class ProductDTO {
+    private Integer productId;
+    private String name;
+    private double newPrice;
+    private Double discount;
+    private String image;
+    private String description;
+}
+package com.genckart.service.Impl;
+
+import com.genckart.clients.CartClient;
+import com.genckart.clients.ProductClient;
+import com.genckart.clients.UserClient;
+import com.genckart.dto.*;
+import com.genckart.entity.*;
+import com.genckart.exception.OrderNotFoundException;
+import com.genckart.repository.OrderHistoryRepository;
+import com.genckart.repository.OrderItemRepository;
+import com.genckart.repository.OrderRepository;
+import com.genckart.service.OrderService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class OrderServiceImpl implements OrderService {
+
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderHistoryRepository orderHistoryRepository;
+    private final UserClient userClient;
+    private final ProductClient productClient;
+    private final CartClient cartClient;
+
+    @Override
+    public OrderDTO placeOrderFromCart(Integer userId) {
+        // Extract UserDTO from ResponseEntity
+        ResponseEntity<UserDTO> userResponse = userClient.getUserById(userId);
+        if (!userResponse.hasBody()) {
+            throw new OrderNotFoundException("User not found for ID: " + userId);
+        }
+        UserDTO user = userResponse.getBody();
+
+        System.out.println("User Address ID: " + user.getAddressId()); // Debugging
+
+        // Extract CartDTO from ResponseEntity
+        ResponseEntity<List<CartDTO>> cartResponse = cartClient.getCartByUserId(userId);
+        if (!cartResponse.hasBody()) {
+            throw new OrderNotFoundException("Cart not found for user ID: " + userId);
+        }
+        List<CartDTO> cartList = cartResponse.getBody();
+
+        if (cartList == null || cartList.isEmpty()) {
+            throw new OrderNotFoundException("Cart is empty for user ID: " + userId);
+        }
+
+        // Create a new Order
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setOrderStatus("PENDING");
+        order.setDeliveryAddressId(user.getAddressId());  // Ensure user has a valid address
+        order.setDeliveryDate(LocalDate.now().plusDays(7));
+
+        AtomicReference<Double> totalAmount = new AtomicReference<>(0.0);
+
+        List<OrderItem> orderItems = cartList.stream()
+                .flatMap(cartDTO -> cartDTO.getCartItems().stream())
+                .map(cartItem -> {
+                    OrderItem orderItem = new OrderItem();
+                    orderItem.setOrder(order);
+                    orderItem.setProductId(cartItem.getProductId());
+                    orderItem.setQuantity(cartItem.getQuantity());
+
+                    // Get product details
+                    ResponseEntity<ProductDTO> productResponse = productClient.getProductById(cartItem.getProductId());
+                    if (productResponse.hasBody()) {
+                        ProductDTO product = productResponse.getBody();
+                        double productPrice = product.getNewPrice();
+                        double discountPercentage = product.getDiscount() != null ? product.getDiscount() : 0.0;
+                        double discountedPrice = productPrice - (productPrice * discountPercentage / 100);
+                        double finalPrice = discountedPrice * cartItem.getQuantity();
+
+                        totalAmount.updateAndGet(v -> v + finalPrice);
+                    } else {
+                        System.out.println("Product not found for ID: " + cartItem.getProductId());
+                    }
+                    return orderItem;
+                }).collect(Collectors.toList());
+
+        order.setTotalAmount(totalAmount.get());
+
+        Order savedOrder = orderRepository.save(order);
+        orderItems.forEach(item -> item.setOrder(savedOrder));
+        orderItemRepository.saveAll(orderItems);
+
+        OrderHistory orderHistory = new OrderHistory();
+        orderHistory.setOrder(savedOrder);
+        orderHistory.setUserId(userId);
+        orderHistory.setOrderStatus("PENDING");
+        orderHistoryRepository.save(orderHistory);
+
+        // Fetch order details after saving
+        OrderDTO orderDTO = convertToDTO(savedOrder);
+
+        // Set order items in response
+        orderDTO.setOrderItems(orderItemRepository.findByOrderId(savedOrder.getOrderId())
+                .stream().map(this::convertToOrderItemDTO).collect(Collectors.toList()));
+
+        // Set order history in response
+        orderDTO.setOrderHistory(orderHistoryRepository.findByOrderId(savedOrder.getOrderId())
+                .stream().map(this::convertToOrderHistoryDTO).collect(Collectors.toList()));
+
+        return orderDTO;
+    }
+
+    public OrderDTO placeOrderFromProductDetail(Integer userId, Integer productId, Integer quantity) {
+        // Extract UserDTO from ResponseEntity
+        ResponseEntity<UserDTO> userResponse = userClient.getUserById(userId);
+        if (!userResponse.hasBody()) {
+            throw new OrderNotFoundException("User not found for ID: " + userId);
+        }
+        UserDTO user = userResponse.getBody();
+
+        // Extract ProductDTO from ResponseEntity
+        ResponseEntity<ProductDTO> productResponse = productClient.getProductById(productId);
+        if (!productResponse.hasBody()) {
+            throw new OrderNotFoundException("Product not found for ID: " + productId);
+        }
+        ProductDTO product = productResponse.getBody();
+
+        double productPrice = product.getNewPrice();
+        double discountPercentage = product.getDiscount();
+        double discountedPrice = productPrice - (productPrice * discountPercentage / 100);
+        double finalPrice = discountedPrice * quantity;
+
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setTotalAmount(finalPrice);
+        order.setOrderStatus("PENDING");
+        order.setDeliveryAddressId(user.getAddressId());
+        order.setDeliveryDate(LocalDate.now().plusDays(7));
+
+        Order savedOrder = orderRepository.save(order);
+
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrder(savedOrder);
+        orderItem.setProductId(productId);
+        orderItem.setQuantity(quantity);
+        orderItemRepository.save(orderItem);
+
+        OrderHistory orderHistory = new OrderHistory();
+        orderHistory.setOrder(savedOrder);
+        orderHistory.setUserId(userId);
+        orderHistory.setOrderStatus("PENDING");
+        orderHistoryRepository.save(orderHistory);
+
+        return convertToDTO(savedOrder);
+    }
+
+    public OrderDTO getOrderDetails(Integer orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+        List<OrderHistory> orderHistory = orderHistoryRepository.findByOrderId(orderId);
+
+        OrderDTO orderDTO = convertToDTO(order);
+        orderDTO.setOrderItems(orderItems.stream()
+                .map(this::convertToOrderItemDTO)
+                .collect(Collectors.toList()));
+        orderDTO.setOrderHistory(orderHistory.stream()
+                .map(this::convertToOrderHistoryDTO)
+                .collect(Collectors.toList()));
+
+        return orderDTO;
+    }
+
+    public List<OrderDTO> getOrderHistory(Integer userId) {
+        List<Order> orders = orderRepository.findByUserId(userId);
+        if (orders.isEmpty()) {
+            throw new OrderNotFoundException("No orders found for user ID: " + userId);
+        }
+        return orders.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteOrder(Integer orderId) {
+        if (!orderRepository.existsById(orderId)) {
+            throw new OrderNotFoundException("Order not found with ID: " + orderId);
+        }
+        orderItemRepository.deleteByOrder_OrderId(orderId);
+        orderHistoryRepository.deleteByOrder_OrderId(orderId);
+        orderRepository.deleteById(orderId);
+    }
+
+    private OrderDTO convertToDTO(Order order) {
+        OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setOrderId(order.getOrderId());
+        orderDTO.setUserId(order.getUserId());
+        orderDTO.setTotalAmount(order.getTotalAmount());
+        orderDTO.setOrderStatus(order.getOrderStatus());
+        orderDTO.setDeliveryAddressId(order.getDeliveryAddressId());
+        orderDTO.setDeliveryDate(order.getDeliveryDate());
+        orderDTO.setCreatedAt(order.getCreatedAt());
+        return orderDTO;
+    }
+
+    private OrderItemDTO convertToOrderItemDTO(OrderItem orderItem) {
+        OrderItemDTO orderItemDTO = new OrderItemDTO();
+        orderItemDTO.setOrderItemId(orderItem.getOrderItemId());
+        orderItemDTO.setProductId(orderItem.getProductId());
+        orderItemDTO.setQuantity(orderItem.getQuantity());
+
+        // Extract ProductDTO from ResponseEntity
+        ResponseEntity<ProductDTO> productResponse = productClient.getProductById(orderItem.getProductId());
+        if (productResponse.hasBody()) {
+            ProductDTO product = productResponse.getBody();
+            orderItemDTO.setProductName(product.getName());
+            orderItemDTO.setDiscount(product.getDiscount());
+            orderItemDTO.setFinalPrice(product.getNewPrice());
+        } else {
+            orderItemDTO.setProductName("Unknown Product");
+            orderItemDTO.setPrice(0.0);
+            orderItemDTO.setDiscount(0.0);
+            orderItemDTO.setFinalPrice(0.0);
+        }
+        return orderItemDTO;
+    }
+
+    private OrderHistoryDTO convertToOrderHistoryDTO(OrderHistory orderHistory) {
+        OrderHistoryDTO orderHistoryDTO = new OrderHistoryDTO();
+        orderHistoryDTO.setOrderHistoryId(orderHistory.getOrderHistoryId());
+        orderHistoryDTO.setOrderId(orderHistory.getOrder().getOrderId());
+        orderHistoryDTO.setUserId(orderHistory.getUserId());
+        orderHistoryDTO.setOrderStatus(orderHistory.getOrderStatus());
+        return orderHistoryDTO;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 public OrderDTO placeOrderFromProductDetail(Integer userId, Integer productId, Integer quantity) {
         // Extract UserDTO from ResponseEntity
         ResponseEntity<UserDTO> userResponse = userClient.getUserById(userId);
