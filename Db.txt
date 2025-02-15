@@ -1,3 +1,106 @@
+@Override
+public OrderDTO placeOrderFromCart(Integer userId) {
+    // Extract UserDTO from ResponseEntity
+    ResponseEntity<UserDTO> userResponse = userClient.getUserById(userId);
+    if (!userResponse.hasBody()) {
+        throw new OrderNotFoundException("User not found for ID: " + userId);
+    }
+    UserDTO user = userResponse.getBody();
+
+    System.out.println("User Address ID: " + user.getAddressId()); // Debugging
+
+    // Extract CartDTO from ResponseEntity
+    ResponseEntity<List<CartDTO>> cartResponse = cartClient.getCartByUserId(userId);
+    if (!cartResponse.hasBody()) {
+        throw new OrderNotFoundException("Cart not found for user ID: " + userId);
+    }
+    List<CartDTO> cartList = cartResponse.getBody();
+
+    if (cartList == null || cartList.isEmpty()) {
+        throw new OrderNotFoundException("Cart is empty for user ID: " + userId);
+    }
+
+    // Create a new Order
+    Order order = new Order();
+    order.setUserId(userId);
+    order.setOrderStatus("PENDING");
+    order.setDeliveryAddressId(user.getAddressId());  // Ensure user has a valid address
+    order.setDeliveryDate(LocalDate.now().plusDays(7));
+
+    AtomicReference<Double> totalAmount = new AtomicReference<>(0.0);
+
+    List<OrderItem> orderItems = cartList.stream()
+            .flatMap(cartDTO -> cartDTO.getCartItems().stream())
+            .map(cartItem -> {
+                OrderItem orderItem = new OrderItem();
+                orderItem.setOrder(order);
+                orderItem.setProductId(cartItem.getProductId());
+                orderItem.setQuantity(cartItem.getQuantity());
+
+                // Get product details
+                ResponseEntity<ProductDTO> productResponse = productClient.getProductById(cartItem.getProductId());
+                if (productResponse.hasBody()) {
+                    ProductDTO product = productResponse.getBody();
+                    double productPrice = product.getNewPrice();
+                    double discountPercentage = product.getDiscount() != null ? product.getDiscount() : 0.0;
+                    double discountedPrice = productPrice - (productPrice * discountPercentage / 100);
+                    double finalPrice = discountedPrice * cartItem.getQuantity();
+
+                    totalAmount.updateAndGet(v -> v + finalPrice);
+                } else {
+                    System.out.println("Product not found for ID: " + cartItem.getProductId());
+                }
+                return orderItem;
+            }).collect(Collectors.toList());
+
+    order.setTotalAmount(totalAmount.get());
+
+    Order savedOrder = orderRepository.save(order);
+    orderItems.forEach(item -> item.setOrder(savedOrder));
+    orderItemRepository.saveAll(orderItems);
+
+    OrderHistory orderHistory = new OrderHistory();
+    orderHistory.setOrder(savedOrder);
+    orderHistory.setUserId(userId);
+    orderHistory.setOrderStatus("PENDING");
+    orderHistoryRepository.save(orderHistory);
+
+    // Fetch order details after saving
+    OrderDTO orderDTO = convertToDTO(savedOrder);
+
+    // Set order items in response
+    orderDTO.setOrderItems(orderItemRepository.findByOrderId(savedOrder.getOrderId())
+            .stream().map(this::convertToOrderItemDTO).collect(Collectors.toList()));
+
+    // Set order history in response
+    orderDTO.setOrderHistory(orderHistoryRepository.findByOrderId(savedOrder.getOrderId())
+            .stream().map(this::convertToOrderHistoryDTO).collect(Collectors.toList()));
+
+    return orderDTO;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 requestbody:
 {
     "orderId": 3,
