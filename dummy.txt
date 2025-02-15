@@ -53,7 +53,15 @@ public OrderDTO placeOrderFromCart(Integer userId) {
         return orderDTO;
     }
 
-
+{
+    "userId": 2,
+    "totalAmount": 0.0,
+    "orderStatus": "PLACED",
+    "deliveryAddressId": 0,
+    "deliveryDate": "2025-02-23",
+    "orderItems": [],
+    "orderHistory": null
+}
 
 
 
