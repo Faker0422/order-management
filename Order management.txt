@@ -1,2 +1,498 @@
 Order management:
 
+CREATE DATABASE orderDb;
+
+USE orderDb;
+
+-- Table to store order details
+CREATE TABLE orders (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    total_amount DOUBLE NOT NULL,
+    order_status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    delivery_address_id INT NOT NULL,
+    delivery_date DATE NOT NULL, -- New field for delivery date
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Table to store order items
+CREATE TABLE order_items (
+    order_item_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    price DOUBLE NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id)
+);
+
+-- Table to store order history
+CREATE TABLE order_history (
+    order_history_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    user_id INT NOT NULL,
+    order_status VARCHAR(50) NOT NULL,
+    status_changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id)
+);
+
+package com.genckart.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.sql.Timestamp;
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "orders")
+public class Order {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer orderId;
+
+    @Column(nullable = false)
+    private Integer userId;
+
+    @Column(nullable = false)
+    private Double totalAmount;
+
+    @Column(nullable = false)
+    private String orderStatus;
+
+    @Column(nullable = false)
+    private Integer deliveryAddressId;
+
+    @Column(updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private Timestamp createdAt;
+
+    @Column(insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    private Timestamp updatedAt;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<OrderItem> orderItems;
+}
+
+package com.genckart.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "order_items")
+public class OrderItem {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer orderItemId;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
+
+    @Column(nullable = false)
+    private Integer productId;
+
+    @Column(nullable = false)
+    private Integer quantity;
+
+    @Column(nullable = false)
+    private Double price;
+}
+
+package com.genckart.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.sql.Timestamp;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "order_history")
+public class OrderHistory {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer orderHistoryId;
+
+    @Column(nullable = false)
+    private Integer orderId;
+
+    @Column(nullable = false)
+    private Integer userId;
+
+    @Column(nullable = false)
+    private String orderStatus;
+
+    @Column(updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private Timestamp statusChangedAt;
+}
+
+
+package com.genckart.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class OrderDTO {
+    private Integer orderId;
+    private Integer userId;
+    private Double totalAmount;
+    private String orderStatus;
+    private Integer deliveryAddressId;
+    private LocalDate deliveryDate;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
+    private List<OrderItemDTO> orderItems; // List of order items
+    private List<OrderHistoryDTO> orderHistory; // List of order history
+}
+
+package com.genckart.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class OrderItemDTO {
+    private Integer productId;
+    private Integer quantity;
+    private Double price;
+}
+
+package com.genckart.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.sql.Timestamp;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class OrderHistoryDTO {
+    private Integer orderHistoryId;
+    private Integer orderId;
+    private Integer userId;
+    private String orderStatus;
+    private Timestamp statusChangedAt;
+}
+
+package com.genckart.repository;
+
+import com.genckart.entity.Order;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface OrderRepository extends JpaRepository<Order, Integer> {
+    List<Order> findByUserId(Integer userId);
+}
+
+package com.genckart.repository;
+
+import com.genckart.entity.OrderItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
+    List<OrderItem> findByOrderId(Integer orderId);
+}
+
+package com.genckart.repository;
+
+import com.genckart.entity.OrderHistory;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface OrderHistoryRepository extends JpaRepository<OrderHistory, Integer> {
+    List<OrderHistory> findByOrderId(Integer orderId);
+}
+
+package com.genckart.client;
+
+import com.genckart.dto.UserDTO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@FeignClient(name = "user-service", url = "http://localhost:8082/user")
+public interface UserClient {
+    @GetMapping("/profile/{id}")
+    UserDTO getUserById(@PathVariable Integer id);
+}
+
+package com.genckart.client;
+
+import com.genckart.dto.ProductDTO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@FeignClient(name = "product-service", url = "http://localhost:8081/products")
+public interface ProductClient {
+    @GetMapping("/{id}")
+    ProductDTO getProductById(@PathVariable Integer id);
+}
+
+package com.genckart.client;
+
+import com.genckart.dto.CartDTO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@FeignClient(name = "cart-service", url = "http://localhost:8083/cart")
+public interface CartClient {
+    @GetMapping("/user/{userId}")
+    CartDTO getCartByUserId(@PathVariable Integer userId);
+}
+
+package com.genckart.service;
+
+import com.genckart.client.CartClient;
+import com.genckart.client.ProductClient;
+import com.genckart.client.UserClient;
+import com.genckart.dto.*;
+import com.genckart.entity.*;
+import com.genckart.exception.OrderNotFoundException;
+import com.genckart.repository.OrderHistoryRepository;
+import com.genckart.repository.OrderItemRepository;
+import com.genckart.repository.OrderRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class OrderService {
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+
+    @Autowired
+    private OrderHistoryRepository orderHistoryRepository;
+
+    @Autowired
+    private UserClient userClient;
+
+    @Autowired
+    private ProductClient productClient;
+
+    @Autowired
+    private CartClient cartClient;
+
+    public OrderDTO placeOrderFromCart(Integer userId) {
+        UserDTO user = userClient.getUserById(userId);
+        CartDTO cart = cartClient.getCartByUserId(userId);
+
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setTotalAmount(cart.getCartItems().stream()
+                .mapToDouble(item -> item.getProductPrice() * item.getQuantity())
+                .sum());
+        order.setOrderStatus("PENDING");
+        order.setDeliveryAddressId(user.getAddress().getAddressId());
+        order.setDeliveryDate(LocalDate.now().plusDays(7));
+
+        Order savedOrder = orderRepository.save(order);
+
+        List<OrderItem> orderItems = cart.getCartItems().stream()
+                .map(item -> {
+                    OrderItem orderItem = new OrderItem();
+                    orderItem.setOrder(savedOrder);
+                    orderItem.setProductId(item.getProductId());
+                    orderItem.setQuantity(item.getQuantity());
+                    orderItem.setPrice(item.getProductPrice());
+                    return orderItem;
+                }).collect(Collectors.toList());
+
+        orderItemRepository.saveAll(orderItems);
+
+        OrderHistory orderHistory = new OrderHistory();
+        orderHistory.setOrderId(savedOrder.getOrderId());
+        orderHistory.setUserId(userId);
+        orderHistory.setOrderStatus("PENDING");
+        orderHistoryRepository.save(orderHistory);
+
+        return convertToDTO(savedOrder);
+    }
+
+    public OrderDTO placeOrderFromProductDetail(Integer userId, Integer productId, Integer quantity) {
+        UserDTO user = userClient.getUserById(userId);
+        ProductDTO product = productClient.getProductById(productId);
+
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setTotalAmount(product.getNewPrice() * quantity);
+        order.setOrderStatus("PENDING");
+        order.setDeliveryAddressId(user.getAddress().getAddressId());
+        order.setDeliveryDate(LocalDate.now().plusDays(7));
+
+        Order savedOrder = orderRepository.save(order);
+
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrder(savedOrder);
+        orderItem.setProductId(productId);
+        orderItem.setQuantity(quantity);
+        orderItem.setPrice(product.getNewPrice());
+        orderItemRepository.save(orderItem);
+
+        OrderHistory orderHistory = new OrderHistory();
+        orderHistory.setOrderId(savedOrder.getOrderId());
+        orderHistory.setUserId(userId);
+        orderHistory.setOrderStatus("PENDING");
+        orderHistoryRepository.save(orderHistory);
+
+        return convertToDTO(savedOrder);
+    }
+
+    public List<OrderDTO> getOrderHistory(Integer userId) {
+        List<Order> orders = orderRepository.findByUserId(userId);
+        return orders.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    public OrderDTO getOrderDetails(Integer orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+        List<OrderHistory> orderHistory = orderHistoryRepository.findByOrderId(orderId);
+
+        OrderDTO orderDTO = convertToDTO(order);
+        orderDTO.setOrderItems(orderItems.stream()
+                .map(this::convertToOrderItemDTO)
+                .collect(Collectors.toList()));
+        orderDTO.setOrderHistory(orderHistory.stream()
+                .map(this::convertToOrderHistoryDTO)
+                .collect(Collectors.toList()));
+
+        return orderDTO;
+    }
+
+    public void deleteOrder(Integer orderId) {
+        if (!orderRepository.existsById(orderId)) {
+            throw new OrderNotFoundException("Order not found with ID: " + orderId);
+        }
+
+        orderItemRepository.deleteByOrderId(orderId);
+        orderHistoryRepository.deleteByOrderId(orderId);
+        orderRepository.deleteById(orderId);
+    }
+
+    private OrderDTO convertToDTO(Order order) {
+        OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setOrderId(order.getOrderId());
+        orderDTO.setUserId(order.getUserId());
+        orderDTO.setTotalAmount(order.getTotalAmount());
+        orderDTO.setOrderStatus(order.getOrderStatus());
+        orderDTO.setDeliveryAddressId(order.getDeliveryAddressId());
+        orderDTO.setDeliveryDate(order.getDeliveryDate());
+        orderDTO.setCreatedAt(order.getCreatedAt());
+        orderDTO.setUpdatedAt(order.getUpdatedAt());
+        return orderDTO;
+    }
+
+    private OrderItemDTO convertToOrderItemDTO(OrderItem orderItem) {
+        OrderItemDTO orderItemDTO = new OrderItemDTO();
+        orderItemDTO.setProductId(orderItem.getProductId());
+        orderItemDTO.setQuantity(orderItem.getQuantity());
+        orderItemDTO.setPrice(orderItem.getPrice());
+        return orderItemDTO;
+    }
+
+    private OrderHistoryDTO convertToOrderHistoryDTO(OrderHistory orderHistory) {
+        OrderHistoryDTO orderHistoryDTO = new OrderHistoryDTO();
+        orderHistoryDTO.setOrderHistoryId(orderHistory.getOrderHistoryId());
+        orderHistoryDTO.setOrderId(orderHistory.getOrderId());
+        orderHistoryDTO.setUserId(orderHistory.getUserId());
+        orderHistoryDTO.setOrderStatus(orderHistory.getOrderStatus());
+        orderHistoryDTO.setStatusChangedAt(orderHistory.getStatusChangedAt());
+        return orderHistoryDTO;
+    }
+}
+
+
+package com.genckart.controller;
+
+import com.genckart.dto.OrderDTO;
+import com.genckart.service.OrderService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/orders")
+public class OrderController {
+
+    @Autowired
+    private OrderService orderService;
+
+    @PostMapping("/cart/{userId}")
+    public ResponseEntity<OrderDTO> placeOrderFromCart(@PathVariable Integer userId) {
+        OrderDTO savedOrder = orderService.placeOrderFromCart(userId);
+        return new ResponseEntity<>(savedOrder, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/product/{userId}/{productId}/{quantity}")
+    public ResponseEntity<OrderDTO> placeOrderFromProductDetail(
+            @PathVariable Integer userId,
+            @PathVariable Integer productId,
+            @PathVariable Integer quantity) {
+        OrderDTO savedOrder = orderService.placeOrderFromProductDetail(userId, productId, quantity);
+        return new ResponseEntity<>(savedOrder, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/history/{userId}")
+    public ResponseEntity<List<OrderDTO>> getOrderHistory(@PathVariable Integer userId) {
+        List<OrderDTO> orders = orderService.getOrderHistory(userId);
+        return new ResponseEntity<>(orders, HttpStatus.OK);
+    }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderDTO> getOrderDetails(@PathVariable Integer orderId) {
+        OrderDTO order = orderService.getOrderDetails(orderId);
+        return new ResponseEntity<>(order, HttpStatus.OK);
+    }
+}
+
