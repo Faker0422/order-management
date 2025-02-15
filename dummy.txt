@@ -1,3 +1,24 @@
+package com.genckart.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class ProductDTO {
+    private Integer productId;
+    private String name;
+    private double newPrice;
+    private Double discount;
+    private String image;
+    private String description;
+}
+
+
+
+
 package com.genckart.service;
 
 import com.genckart.dto.*;
