@@ -1,3 +1,107 @@
+
+package com.genckart.service;
+
+import com.genckart.dto.*;
+import com.genckart.entity.Order;
+import com.genckart.entity.OrderItem;
+import com.genckart.repository.OrderRepository;
+import com.genckart.repository.OrderItemRepository;
+import com.genckart.client.CartClient;
+import com.genckart.client.UserClient;
+import com.genckart.client.ProductClient;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class OrderService {
+
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final CartClient cartClient;
+    private final UserClient userClient;
+    private final ProductClient productClient;
+
+    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, CartClient cartClient, UserClient userClient, ProductClient productClient) {
+        this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
+        this.cartClient = cartClient;
+        this.userClient = userClient;
+        this.productClient = productClient;
+    }
+
+    public OrderDTO placeOrderFromCart(int userId) {
+        // Fetch cart details from Cart microservice using OpenFeign
+        ResponseEntity<CartDTO> cartResponse = cartClient.getCartByUserId(userId);
+        if (!cartResponse.hasBody() || cartResponse.getBody() == null || cartResponse.getBody().getCartItems().isEmpty()) {
+            throw new RuntimeException("Cart is empty or not found for user: " + userId);
+        }
+        CartDTO cart = cartResponse.getBody();
+
+        // Fetch user address from User microservice using OpenFeign
+        ResponseEntity<UserDTO> userResponse = userClient.getUserById(userId);
+        if (!userResponse.hasBody() || userResponse.getBody() == null) {
+            throw new RuntimeException("User not found: " + userId);
+        }
+        UserDTO user = userResponse.getBody();
+        int addressId = user.getAddressId();
+
+        // Calculate total amount
+        double totalAmount = cart.getCartItems().stream()
+                .mapToDouble(item -> item.getProductPrice() * item.getQuantity())
+                .sum();
+
+        // Create order entity
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setTotalAmount(totalAmount);
+        order.setOrderStatus("PLACED");
+        order.setDeliveryAddressId(addressId);
+        order.setDeliveryDate(LocalDate.now().plusDays(7));
+        order = orderRepository.save(order);
+
+        // Save order items and fetch product details (including discount and image)
+        List<OrderItemDTO> orderItemDTOs = cart.getCartItems().stream().map(cartItem -> {
+            ResponseEntity<ProductDTO> productResponse = productClient.getProductById(cartItem.getProductId());
+            if (!productResponse.hasBody() || productResponse.getBody() == null) {
+                throw new RuntimeException("Product not found: " + cartItem.getProductId());
+            }
+            ProductDTO product = productResponse.getBody();
+            
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setProductId(cartItem.getProductId());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItemRepository.save(orderItem);
+            
+            return new OrderItemDTO(orderItem.getOrderItemId(), cartItem.getProductId(), product.getProductName(), cartItem.getQuantity(), cartItem.getProductPrice(), product.getDiscount(), product.getImgUrl());
+        }).collect(Collectors.toList());
+
+        // Convert to DTO and return
+        OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setOrderId(order.getOrderId());
+        orderDTO.setUserId(userId);
+        orderDTO.setTotalAmount(totalAmount);
+        orderDTO.setOrderStatus("PLACED");
+        orderDTO.setDeliveryAddressId(addressId);
+        orderDTO.setDeliveryDate(order.getDeliveryDate());
+        orderDTO.setOrderItems(orderItemDTOs);
+
+        return orderDTO;
+    }
+}
+
+
+
+
+
+
+
+
+
 package com.genckart.entity;
 
 import jakarta.persistence.*;
