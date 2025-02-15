@@ -462,18 +462,16 @@ public class OrderService {
     }
 
     @Scheduled(cron = "0 0 0 * * ?")
-    public void checkAndUpdateOrderStatus() {
-        List<Order> pendingOrders = orderRepository.findByOrderStatus("PENDING");
-
-        for (Order order : pendingOrders) {
-            if (LocalDate.now().isAfter(order.getDeliveryDate().minusDays(2))) {
-                updateOrderStatus(order.getOrderId(), "IN_PROGRESS");
-            }
-            if (LocalDate.now().isAfter(order.getDeliveryDate())) {
-                updateOrderStatus(order.getOrderId(), "DELIVERED");
-            }
+public void checkAndUpdateOrderStatus() {
+    List<Order> activeOrders = orderRepository.findByOrderStatusNot("DELIVERED");
+    for (Order order : activeOrders) {
+        if (LocalDate.now().isAfter(order.getDeliveryDate().minusDays(2)) && order.getOrderStatus().equals("PENDING")) {
+            updateOrderStatus(order.getOrderId(), "IN_PROGRESS");
+        } else if (LocalDate.now().isAfter(order.getDeliveryDate()) && order.getOrderStatus().equals("IN_PROGRESS")) {
+            updateOrderStatus(order.getOrderId(), "DELIVERED");
         }
     }
+}
 
 
     public List<OrderDTO> getOrderHistory(Integer userId) {
@@ -632,5 +630,13 @@ import java.util.List;
 
 public interface OrderHistoryRepository extends JpaRepository<OrderHistory, Integer> {
     List<OrderHistory> findByOrderId(Integer orderId);
+}
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<String> handleOrderNotFoundException(OrderNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
 }
 
