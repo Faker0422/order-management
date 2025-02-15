@@ -356,61 +356,79 @@ public class OrderService {
     @Autowired
     private CartClient cartClient;
 
-    public OrderDTO placeOrderFromCart(Integer userId) {
-        UserDTO user = userClient.getUserById(userId);
-        CartDTO cart = cartClient.getCartByUserId(userId);
+   public OrderDTO placeOrderFromCart(Integer userId) {
+    UserDTO user = userClient.getUserById(userId);
+    CartDTO cart = cartClient.getCartByUserId(userId);
 
-        Order order = new Order();
-        order.setUserId(userId);
-        order.setTotalAmount(cart.getCartItems().stream()
-                .mapToDouble(item -> item.getProductPrice() * item.getQuantity())
-                .sum());
-        order.setOrderStatus("PENDING");
-        order.setDeliveryAddressId(user.getAddress().getAddressId());
-        order.setDeliveryDate(LocalDate.now().plusDays(7));
+    Order order = new Order();
+    order.setUserId(userId);
+    order.setOrderStatus("PENDING");
+    order.setDeliveryAddressId(user.getAddress().getAddressId());
+    order.setDeliveryDate(LocalDate.now().plusDays(7));
 
-        Order savedOrder = orderRepository.save(order);
+    List<OrderItem> orderItems = cart.getCartItems().stream()
+            .map(item -> {
+                ProductDTO product = productClient.getProductById(item.getProductId());
+                double productPrice = product.getNewPrice();
+                double discountPercentage = product.getDiscount(); // Discount in percentage
+                double discountedPrice = productPrice - (productPrice * discountPercentage / 100);
+                double finalPrice = discountedPrice * item.getQuantity();
 
-        List<OrderItem> orderItems = cart.getCartItems().stream()
-                .map(item -> {
-                    OrderItem orderItem = new OrderItem();
-                    orderItem.setOrder(savedOrder);
-                    orderItem.setProductId(item.getProductId());
-                    orderItem.setQuantity(item.getQuantity());
-                    orderItem.setPrice(item.getProductPrice());
-                    return orderItem;
-                }).collect(Collectors.toList());
+                OrderItem orderItem = new OrderItem();
+                orderItem.setOrder(order);
+                orderItem.setProductId(item.getProductId());
+                orderItem.setQuantity(item.getQuantity());
+                orderItem.setPrice(productPrice); // Original price
+                orderItem.setDiscount(discountPercentage); // Discount percentage
+                orderItem.setFinalPrice(finalPrice); // Computed final price
 
-        orderItemRepository.saveAll(orderItems);
+                return orderItem;
+            }).collect(Collectors.toList());
 
-        OrderHistory orderHistory = new OrderHistory();
-        orderHistory.setOrderId(savedOrder.getOrderId());
-        orderHistory.setUserId(userId);
-        orderHistory.setOrderStatus("PENDING");
-        orderHistoryRepository.save(orderHistory);
+    // Calculate total amount based on discounted prices
+    double totalAmount = orderItems.stream().mapToDouble(OrderItem::getFinalPrice).sum();
+    order.setTotalAmount(totalAmount);
 
-        return convertToDTO(savedOrder);
-    }
+    Order savedOrder = orderRepository.save(order);
+    orderItems.forEach(item -> item.setOrder(savedOrder)); // Set saved order for items
+    orderItemRepository.saveAll(orderItems);
+
+    // Save order history
+    OrderHistory orderHistory = new OrderHistory();
+    orderHistory.setOrderId(savedOrder.getOrderId());
+    orderHistory.setUserId(userId);
+    orderHistory.setOrderStatus("PENDING");
+    orderHistoryRepository.save(orderHistory);
+
+    return convertToDTO(savedOrder);
+}
 
     public OrderDTO placeOrderFromProductDetail(Integer userId, Integer productId, Integer quantity) {
         UserDTO user = userClient.getUserById(userId);
         ProductDTO product = productClient.getProductById(productId);
 
-        Order order = new Order();
-        order.setUserId(userId);
-        order.setTotalAmount(product.getNewPrice() * quantity);
-        order.setOrderStatus("PENDING");
-        order.setDeliveryAddressId(user.getAddress().getAddressId());
-        order.setDeliveryDate(LocalDate.now().plusDays(7));
+         double productPrice = product.getNewPrice();
+        double discountPercentage = product.getDiscount(); // Discount stored in percentage
+        double discountedPrice = productPrice - (productPrice * discountPercentage / 100);
+        double finalPrice = discountedPrice * quantity;
+    
+       Order order = new Order();
+    order.setUserId(userId);
+    order.setTotalAmount(finalPrice);
+    order.setOrderStatus("PENDING");
+    order.setDeliveryAddressId(user.getAddress().getAddressId());
+    order.setDeliveryDate(LocalDate.now().plusDays(7));
 
         Order savedOrder = orderRepository.save(order);
 
         OrderItem orderItem = new OrderItem();
-        orderItem.setOrder(savedOrder);
-        orderItem.setProductId(productId);
-        orderItem.setQuantity(quantity);
-        orderItem.setPrice(product.getNewPrice());
-        orderItemRepository.save(orderItem);
+    orderItem.setOrder(savedOrder);
+    orderItem.setProductId(productId);
+    orderItem.setQuantity(quantity);
+    orderItem.setPrice(productPrice); // Original price
+    orderItem.setDiscount(discountPercentage); // Discount in percentage
+    orderItem.setFinalPrice(finalPrice); // Computed final price
+    orderItemRepository.save(orderItem);
 
         OrderHistory orderHistory = new OrderHistory();
         orderHistory.setOrderId(savedOrder.getOrderId());
