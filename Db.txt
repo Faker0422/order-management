@@ -1,3 +1,60 @@
+{
+    "orderId": 3,
+    "userId": 3,
+    "totalAmount": 2700.0,
+    "orderStatus": "SHIPPED",
+    "deliveryAddressId": 103,
+    "deliveryDate": "2025-02-24",
+    "createdAt": "2025-02-15T06:54:36.000+00:00",
+    "updatedAt": null,
+    "orderItems": [
+        {
+            "orderItemId": null,
+            "productId": 5,
+            "productName": null,
+            "quantity": 2,
+            "price": 500.0,
+            "discount": null,
+            "finalPrice": null,
+            "createdAt": null
+        },
+        {
+            "orderItemId": null,
+            "productId": 6,
+            "productName": null,
+            "quantity": 3,
+            "price": 600.0,
+            "discount": null,
+            "finalPrice": null,
+            "createdAt": null
+        }
+    ],
+    "orderHistory": [
+        {
+            "orderHistoryId": 3,
+            "orderId": 3,
+            "userId": 3,
+            "orderStatus": "SHIPPED",
+            "statusChangedAt": null
+        }
+    ]
+}
+
+
+  "productName": null,
+            "discount": null,
+            "finalPrice": null,
+            "createdAt": null
+why are all these null fetch these from product table and createdat should is not inserted value it should show when the order is placed according to time zone
+
+
+
+
+
+
+
+
+
 package com.genckart.repository;
 
 import com.genckart.entity.OrderHistory;
