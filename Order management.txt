@@ -20,9 +20,13 @@ CREATE TABLE orders (
 CREATE TABLE order_items (
     order_item_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
-    product_id INT NOT NULL,
-    quantity INT NOT NULL CHECK (quantity > 0),
-    price DOUBLE NOT NULL,
+    product_id INT NOT NULL,  -- No FK constraint since product is in another microservice
+    product_name VARCHAR(255), -- Store product name to avoid extra service calls
+    quantity INT NOT NULL,
+    price DOUBLE NOT NULL,  -- Original Price per unit
+    discount DOUBLE DEFAULT 0,  -- Discount in percentage
+    final_price DOUBLE NOT NULL, -- (price - (price * discount / 100)) * quantity
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES orders(order_id)
 );
 
