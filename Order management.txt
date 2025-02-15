@@ -35,6 +35,43 @@ CREATE TABLE order_history (
     status_changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES orders(order_id)
 );
+INSERT INTO Orders (user_id, total_amount, order_status, delivery_address_id, delivery_date) VALUES
+(1, 250.50, 'PENDING', 101, '2025-02-20'),
+(2, 120.99, 'SHIPPED', 102, '2025-02-22'),
+(3, 89.75, 'DELIVERED', 103, '2025-02-18'),
+(4, 199.99, 'PENDING', 104, '2025-02-25'),
+(5, 300.00, 'CANCELLED', 105, '2025-02-19'),
+(6, 450.25, 'SHIPPED', 106, '2025-02-21'),
+(7, 75.89, 'DELIVERED', 107, '2025-02-17'),
+(8, 150.00, 'PENDING', 108, '2025-02-23'),
+(9, 520.45, 'SHIPPED', 109, '2025-02-26'),
+(10, 99.99, 'DELIVERED', 110, '2025-02-15');
+
+INSERT INTO OrderItems (order_id, product_id, quantity, price) VALUES
+(1, 201, 2, 125.25),
+(1, 202, 1, 125.25),
+(2, 203, 3, 40.33),
+(3, 204, 1, 89.75),
+(4, 205, 2, 99.99),
+(5, 206, 5, 60.00),
+(6, 207, 1, 450.25),
+(7, 208, 3, 25.29),
+(8, 209, 2, 75.00),
+(9, 210, 4, 130.11),
+(10, 211, 1, 99.99);
+
+INSERT INTO OrderHistory (order_id, user_id, order_status) VALUES
+(1, 1, 'PENDING'),
+(2, 2, 'SHIPPED'),
+(3, 3, 'DELIVERED'),
+(4, 4, 'PENDING'),
+(5, 5, 'CANCELLED'),
+(6, 6, 'SHIPPED'),
+(7, 7, 'DELIVERED'),
+(8, 8, 'PENDING'),
+(9, 9, 'SHIPPED'),
+(10, 10, 'DELIVERED');
+
 
 package com.genckart.entity;
 
@@ -384,6 +421,36 @@ public class OrderService {
         return convertToDTO(savedOrder);
     }
 
+ @Transactional
+    public void updateOrderStatus(Integer orderId, String newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+        
+        order.setOrderStatus(newStatus);
+        orderRepository.save(order);
+
+        OrderHistory orderHistory = new OrderHistory();
+        orderHistory.setOrderId(orderId);
+        orderHistory.setUserId(order.getUserId());
+        orderHistory.setOrderStatus(newStatus);
+        orderHistoryRepository.save(orderHistory);
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void checkAndUpdateOrderStatus() {
+        List<Order> pendingOrders = orderRepository.findByOrderStatus("PENDING");
+
+        for (Order order : pendingOrders) {
+            if (LocalDate.now().isAfter(order.getDeliveryDate().minusDays(2))) {
+                updateOrderStatus(order.getOrderId(), "IN_PROGRESS");
+            }
+            if (LocalDate.now().isAfter(order.getDeliveryDate())) {
+                updateOrderStatus(order.getOrderId(), "DELIVERED");
+            }
+        }
+    }
+
+
     public List<OrderDTO> getOrderHistory(Integer userId) {
         List<Order> orders = orderRepository.findByUserId(userId);
         return orders.stream().map(this::convertToDTO).collect(Collectors.toList());
@@ -494,5 +561,51 @@ public class OrderController {
         OrderDTO order = orderService.getOrderDetails(orderId);
         return new ResponseEntity<>(order, HttpStatus.OK);
     }
+}
+
+
+// Service Layer Interfaces
+
+package com.genckart.service;
+
+import com.genckart.dto.OrderDTO;
+import java.util.List;
+
+public interface OrderService {
+    OrderDTO placeOrderFromCart(Integer userId);
+    OrderDTO placeOrderFromProductDetail(Integer userId, Integer productId, Integer quantity);
+    List<OrderDTO> getOrderHistory(Integer userId);
+    OrderDTO getOrderDetails(Integer orderId);
+    void deleteOrder(Integer orderId);
+}
+
+package com.genckart.repository;
+
+import com.genckart.entity.Order;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface OrderRepository extends JpaRepository<Order, Integer> {
+    List<Order> findByUserId(Integer userId);
+}
+
+package com.genckart.repository;
+
+import com.genckart.entity.OrderItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
+    List<OrderItem> findByOrderId(Integer orderId);
+}
+
+package com.genckart.repository;
+
+import com.genckart.entity.OrderHistory;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface OrderHistoryRepository extends JpaRepository<OrderHistory, Integer> {
+    List<OrderHistory> findByOrderId(Integer orderId);
 }
 
