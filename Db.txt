@@ -1,3 +1,59 @@
+public List<OrderDTO> getOrderHistory(Integer userId) {
+        List<Order> orders = orderRepository.findByUserId(userId);
+        if (orders.isEmpty()) {
+            throw new OrderNotFoundException("No orders found for user ID: " + userId);
+        }
+        return orders.stream().map(this::getOrderDetails).collect(Collectors.toList());
+    }
+
+    public OrderDTO getOrderDetails(Integer orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        OrderDTO orderDTO = convertToDTO(order);
+
+        orderDTO.setOrderItems(orderItemRepository.findByOrderId(orderId)
+                .stream().map(this::convertToOrderItemDTO).collect(Collectors.toList()));
+
+        orderDTO.setOrderHistory(orderHistoryRepository.findByOrderId(orderId)
+                .stream().map(this::convertToOrderHistoryDTO).collect(Collectors.toList()));
+
+        return orderDTO;
+    }
+
+    private OrderDTO convertToDTO(Order order) {
+        OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setOrderId(order.getOrderId());
+        orderDTO.setUserId(order.getUserId());
+        orderDTO.setTotalAmount(order.getTotalAmount());
+        orderDTO.setOrderStatus(order.getOrderStatus());
+        orderDTO.setDeliveryAddressId(order.getDeliveryAddressId());
+        orderDTO.setDeliveryDate(order.getDeliveryDate());
+        orderDTO.setCreatedAt(order.getCreatedAt());
+
+        orderDTO.setOrderItems(orderItemRepository.findByOrderId(order.getOrderId())
+                .stream().map(this::convertToOrderItemDTO).collect(Collectors.toList()));
+
+        orderDTO.setOrderHistory(orderHistoryRepository.findByOrderId(order.getOrderId())
+                .stream().map(this::convertToOrderHistoryDTO).collect(Collectors.toList()));
+
+        return orderDTO;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 package com.genckart.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
