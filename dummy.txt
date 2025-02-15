@@ -1,3 +1,25 @@
+{
+  "orderId": 1001,
+  "userId": 1,
+  "totalAmount": 250.00,
+  "orderStatus": "PLACED",
+  "deliveryAddressId": 10,
+  "deliveryDate": "2024-06-20",
+  "orderItems": [
+    {
+      "orderItemId": 5001,
+      "productId": 101,
+      "productName": "Laptop",
+      "quantity": 1,
+      "price": 250.00,
+      "discount": 10.0,
+      "createdAt": "2024-06-13T10:15:30.000Z",
+      "image": "https://example.com/images/laptop.jpg"
+    }
+  ]
+}
+
+
 package com.genckart.service;
 
 import com.genckart.dto.*;
