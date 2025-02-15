@@ -1,1 +1,296 @@
-fake
+package com.genckart.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "orders")
+public class Order {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer orderId;
+
+    @Column(nullable = false)
+    private Integer userId;
+
+    @Column(nullable = false)
+    private Double totalAmount;
+
+    @Column(nullable = false)
+    private String orderStatus;
+
+    @Column(nullable = false)
+    private Integer deliveryAddressId;
+
+    @Column(nullable = false)
+    private LocalDate deliveryDate;  // Added field for delivery date
+
+    @Column(updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private Timestamp createdAt;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<OrderItem> orderItems;
+}
+package com.genckart.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.sql.Timestamp;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "order_history")
+public class OrderHistory {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer orderHistoryId;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
+
+    @Column(nullable = false)
+    private Integer userId;
+
+    @Column(nullable = false)
+    private String orderStatus;
+}
+package com.genckart.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import java.sql.Timestamp;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "order_items")
+public class OrderItem {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer orderItemId;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
+
+    @Column(nullable = false)
+    private Integer productId;
+
+    @Column(nullable = false)
+    private Integer quantity;
+
+    @JsonIgnore
+    @Column(updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private Timestamp createdAt;
+}
+package com.genckart.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import java.sql.Timestamp;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "order_items")
+public class OrderItem {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer orderItemId;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
+
+    @Column(nullable = false)
+    private Integer productId;
+
+    @Column(nullable = false)
+    private Integer quantity;
+
+    @JsonIgnore
+    @Column(updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private Timestamp createdAt;
+}
+package com.genckart.dto;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.*;
+import lombok.*;
+
+import java.util.List;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
+@Getter
+@ToString
+public class UserDTO {
+    @NotNull(message = "Name cannot be null")
+    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+    private String name;
+
+    @NotNull(message = "Email cannot be null")
+    @Email(message = "Email should be valid")
+    private String email;
+
+    @NotNull(message = "Phone number cannot be null")
+    @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Phone number is invalid")
+    private String phoneNumber;
+
+    @NotNull(message = "Role cannot be null")
+    private String role;
+
+    @Min(value = 1, message = "Address ID must be greater than or equal to 1")
+    private int addressId;
+
+    @JsonIgnore
+    private List<AddressDTO> addresses;
+}
+package com.genckart.dto;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.sql.Timestamp;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class OrderItemDTO {
+    private Integer orderItemId;
+    private Integer productId;
+    private String productName;
+    private Integer quantity;
+    private Double price;
+    private Double discount;
+    @JsonIgnore
+    private Timestamp createdAt;
+}
+package com.genckart.dto;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.sql.Timestamp;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class OrderHistoryDTO {
+    private Integer orderHistoryId;
+    private Integer orderId;
+    private Integer userId;
+    private String orderStatus;
+    @JsonIgnore
+    private Timestamp statusChangedAt;
+}
+package com.genckart.dto;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class OrderDTO {
+    @JsonIgnore
+    private Integer orderId;
+    private Integer userId;
+    private Double totalAmount;
+    private String orderStatus;
+    private Integer deliveryAddressId;
+    private LocalDate deliveryDate;
+    @JsonIgnore
+    private Timestamp createdAt;
+
+    private List<OrderItemDTO> orderItems; // List of order items
+
+    private List<OrderHistoryDTO> orderHistory; // List of order history
+}
+package com.genckart.dto;
+
+import lombok.Data;
+
+@Data
+public class CartItemDTO {
+
+    private Integer cartItemId;
+    private Integer userId;
+    private Integer productId;
+    private Integer quantity;
+    private String productName;
+    private Double productPrice;
+}
+package com.genckart.dto;
+
+import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Data
+public class CartDTO {
+
+    private Integer cartId;
+    private int userId;
+    private int productId;
+    private int quantity;
+    private LocalDateTime addedAt;
+    private String userName;
+    private List<CartItemDTO> cartItems;
+}
+package com.genckart.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+public class AddressDTO {
+    private int addressId;
+    private String street;
+    private String city;
+    private String state;
+    private String postalCode;
+    private String country;
+}
