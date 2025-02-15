@@ -1,82 +1,239 @@
-feign.FeignException$NotFound: [404] during [GET] to [http://localhost:8081/api/products/103] [ProductClient#getProductById(Integer)]: [{"endpoint":"/api/products/103","data":null,"message":"Product with id 103 not found","timestamp":"2025-02-15T17:31:47.1550675","status":404}]
-	at feign.FeignException.clientErrorStatus(FeignException.java:249) ~[feign-core-13.5.jar:na]
-	at feign.FeignException.errorStatus(FeignException.java:223) ~[feign-core-13.5.jar:na]
-	at feign.FeignException.errorStatus(FeignException.java:213) ~[feign-core-13.5.jar:na]
-	at feign.codec.ErrorDecoder$Default.decode(ErrorDecoder.java:103) ~[feign-core-13.5.jar:na]
-	at feign.InvocationContext.decodeError(InvocationContext.java:133) ~[feign-core-13.5.jar:na]
-	at feign.InvocationContext.proceed(InvocationContext.java:80) ~[feign-core-13.5.jar:na]
-	at feign.ResponseHandler.handleResponse(ResponseHandler.java:69) ~[feign-core-13.5.jar:na]
-	at feign.SynchronousMethodHandler.executeAndDecode(SynchronousMethodHandler.java:109) ~[feign-core-13.5.jar:na]
-	at feign.SynchronousMethodHandler.invoke(SynchronousMethodHandler.java:53) ~[feign-core-13.5.jar:na]
-	at feign.ReflectiveFeign$FeignInvocationHandler.invoke(ReflectiveFeign.java:104) ~[feign-core-13.5.jar:na]
-	at jdk.proxy2/jdk.proxy2.$Proxy174.getProductById(Unknown Source) ~[na:na]
-	at com.genckart.service.Impl.OrderServiceImpl.convertToOrderItemDTO(OrderServiceImpl.java:162) ~[classes/:na]
-	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:212) ~[na:na]
-	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1709) ~[na:na]
-	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:556) ~[na:na]
-	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:546) ~[na:na]
-	at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921) ~[na:na]
-	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:265) ~[na:na]
-	at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:702) ~[na:na]
-	at com.genckart.service.Impl.OrderServiceImpl.getOrderDetails(OrderServiceImpl.java:123) ~[classes/:na]
-	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
-	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
-	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) ~[spring-aop-6.2.2.jar:6.2.2]
-	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:723) ~[spring-aop-6.2.2.jar:6.2.2]
-	at com.genckart.service.Impl.OrderServiceImpl$$SpringCGLIB$$0.getOrderDetails(<generated>) ~[classes/:na]
-	at com.genckart.controller.OrderController.getOrderDetails(OrderController.java:42) ~[classes/:na]
-	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
-	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
-	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:257) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:986) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:891) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1088) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:978) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564) ~[tomcat-embed-core-10.1.34.jar:6.0]
-	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885) ~[spring-webmvc-6.2.2.jar:6.2.2]
-	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658) ~[tomcat-embed-core-10.1.34.jar:6.0]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51) ~[tomcat-embed-websocket-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:114) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.2.jar:6.2.2]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.34.jar:10.1.34]
-	at java.base/java.lang.Thread.run(Thread.java:1570) ~[na:na]
+package com.genckart.service.Impl;
+
+import com.genckart.clients.CartClient;
+import com.genckart.clients.ProductClient;
+import com.genckart.clients.UserClient;
+import com.genckart.dto.*;
+import com.genckart.entity.*;
+import com.genckart.exception.OrderNotFoundException;
+import com.genckart.repository.OrderHistoryRepository;
+import com.genckart.repository.OrderItemRepository;
+import com.genckart.repository.OrderRepository;
+import com.genckart.service.OrderService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class OrderServiceImpl implements OrderService {
+
+    private final OrderRepository orderRepository;
+
+    private final OrderItemRepository orderItemRepository;
+
+    private final OrderHistoryRepository orderHistoryRepository;
+
+    private final UserClient userClient;
+
+    private final ProductClient productClient;
+
+    private final CartClient cartClient;
+
+    @Override
+    public OrderDTO placeOrderFromCart(Integer userId) {
+        UserDTO user = userClient.getUserById(userId);
+        CartDTO cart = cartClient.getCartByUserId(userId);
+
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setOrderStatus("PENDING");
+        order.setDeliveryAddressId(user.getAddressId());
+        order.setDeliveryDate(LocalDate.now().plusDays(7));
+
+        List<OrderItem> orderItems = cart.getCartItems().stream()
+                .map(item -> {
+                    OrderItem orderItem = new OrderItem();
+                    orderItem.setOrder(order);
+                    orderItem.setProductId(item.getProductId());
+                    orderItem.setQuantity(item.getQuantity());
+
+                    return orderItem;
+                }).collect(Collectors.toList());
+
+        Order savedOrder = orderRepository.save(order);
+        orderItems.forEach(item -> item.setOrder(savedOrder)); // Set saved order for items
+        orderItemRepository.saveAll(orderItems);
+
+        // Save order history
+        OrderHistory orderHistory = new OrderHistory();
+        orderHistory.setOrder(savedOrder);
+        orderHistory.setUserId(userId);
+        orderHistory.setOrderStatus("PENDING");
+        orderHistoryRepository.save(orderHistory);
+
+        return convertToDTO(savedOrder);
+    }
+
+    public OrderDTO placeOrderFromProductDetail(Integer userId, Integer productId, Integer quantity) {
+        UserDTO user = userClient.getUserById(userId);
+        ProductDTO product = productClient.getProductById(productId);
+
+        double productPrice = product.getNewPrice();
+        double discountPercentage = product.getDiscount(); // Discount stored in percentage
+        double discountedPrice = productPrice - (productPrice * discountPercentage / 100);
+        double finalPrice = discountedPrice * quantity;
+
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setTotalAmount(finalPrice);
+        order.setOrderStatus("PENDING");
+        order.setDeliveryAddressId(user.getAddressId());
+        order.setDeliveryDate(LocalDate.now().plusDays(7));
+
+        Order savedOrder = orderRepository.save(order);
+
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrder(savedOrder);
+        orderItem.setProductId(productId);
+        orderItem.setQuantity(quantity);
+        orderItemRepository.save(orderItem);
+
+        OrderHistory orderHistory = new OrderHistory();
+        orderHistory.setOrder(savedOrder);
+        orderHistory.setUserId(userId);
+        orderHistory.setOrderStatus("PENDING");
+        orderHistoryRepository.save(orderHistory);
+
+        return convertToDTO(savedOrder);
+    }
+
+    public List<OrderDTO> getOrderHistory(Integer userId) {
+        List<Order> orders = orderRepository.findByUserId(userId);
+        if (orders.isEmpty()) {
+            throw new OrderNotFoundException("No orders found for user ID: " + userId);
+        }
+        return orders.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    public OrderDTO getOrderDetails(Integer orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+        List<OrderHistory> orderHistory = orderHistoryRepository.findByOrderId(orderId);
+
+        OrderDTO orderDTO = convertToDTO(order);
+        orderDTO.setOrderItems(orderItems.stream()
+                .map(this::convertToOrderItemDTO)
+                .collect(Collectors.toList()));
+        orderDTO.setOrderHistory(orderHistory.stream()
+                .map(this::convertToOrderHistoryDTO)
+                .collect(Collectors.toList()));
+
+        return orderDTO;
+    }
+
+    @Transactional
+    public void deleteOrder(Integer orderId) {
+        if (!orderRepository.existsById(orderId)) {
+            throw new OrderNotFoundException("Order not found with ID: " + orderId);
+        }
+
+        orderItemRepository.deleteByOrder_OrderId(orderId);
+        orderHistoryRepository.deleteByOrder_OrderId(orderId);
+        orderRepository.deleteById(orderId);
+    }
+
+    private OrderDTO convertToDTO(Order order) {
+        OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setOrderId(order.getOrderId());
+        orderDTO.setUserId(order.getUserId());
+        orderDTO.setTotalAmount(order.getTotalAmount());
+        orderDTO.setOrderStatus(order.getOrderStatus());
+        orderDTO.setDeliveryAddressId(order.getDeliveryAddressId());
+        orderDTO.setDeliveryDate(order.getDeliveryDate());
+        orderDTO.setCreatedAt(order.getCreatedAt());
+        return orderDTO;
+    }
+
+    private OrderItemDTO convertToOrderItemDTO(OrderItem orderItem) {
+        OrderItemDTO orderItemDTO = new OrderItemDTO();
+
+        orderItemDTO.setOrderItemId(orderItem.getOrderItemId());
+        orderItemDTO.setProductId(orderItem.getProductId());
+        orderItemDTO.setQuantity(orderItem.getQuantity());
+
+
+        ProductDTO product=productClient.getProductById(orderItem.getProductId());
+        if(product!=null){
+            orderItemDTO.setProductName(product.getName());
+            orderItemDTO.setPrice(product.getOldPrice());
+            orderItemDTO.setDiscount(product.getDiscount());
+            orderItemDTO.setFinalPrice(product.getNewPrice());
+        }
+        return orderItemDTO;
+    }
+
+    private OrderHistoryDTO convertToOrderHistoryDTO(OrderHistory orderHistory) {
+        OrderHistoryDTO orderHistoryDTO = new OrderHistoryDTO();
+        orderHistoryDTO.setOrderHistoryId(orderHistory.getOrderHistoryId());
+        orderHistoryDTO.setOrderId(orderHistory.getOrder().getOrderId());
+        if(orderHistory.getOrder()!=null){
+            orderHistoryDTO.setOrderId(orderHistory.getOrder().getOrderId());
+        }
+        orderHistoryDTO.setUserId(orderHistory.getUserId());
+        orderHistoryDTO.setOrderStatus(orderHistory.getOrderStatus());
+        return orderHistoryDTO;
+    }
+}
+
+package com.genckart.clients;
+
+import com.genckart.dto.CartDTO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@FeignClient(name = "cart-service", url = "http://localhost:8083/cart")
+public interface CartClient {
+    @GetMapping("/user/{userId}")
+    ResponseEntity<CartDTO> getCartByUserId(@PathVariable Integer userId);
+}
+
+package com.genckart.clients;
+
+import com.genckart.dto.ProductDTO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@FeignClient(name = "product-service", url = "http://localhost:8081/api/products")
+public interface ProductClient {
+    @GetMapping("/{id}")
+    ResponseEntity<ProductDTO> getProductById(@PathVariable Integer id);
+}
+
+package com.genckart.clients;
+
+import com.genckart.dto.UserDTO;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@FeignClient(name = "user-service", url = "http://localhost:8082/user")
+public interface UserClient {
+    @GetMapping("/profile/{id}")
+    ResponseEntity<UserDTO> getUserById(@PathVariable Integer id);
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
