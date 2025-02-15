@@ -1,5 +1,66 @@
-2025-02-16T01:04:35.380+05:30  WARN 27372 --- [order-service] [nio-8766-exec-5] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotReadableException: JSON parse error: Cannot deserialize value of type `java.lang.Integer` from Object value (token `JsonToken.START_OBJECT`)]
+@Override
+    public OrderDTO placeOrderFromCart(Integer userId) {
+        // Fetch cart details from Cart microservice
+        ResponseEntity<List<CartDTO>> cartResponse = cartClient.getCartByUserId(userId);
+        if (!cartResponse.hasBody() || cartResponse.getBody() == null || cartResponse.getBody().isEmpty()) {
+            throw new RuntimeException("Cart is empty or not found for user: " + userId);
+        }
+        List<CartDTO> cartList = cartResponse.getBody();
 
+        // Flatten cart items from multiple carts
+        List<CartItemDTO> cartItems = new ArrayList<>();
+        for (CartDTO cart : cartList) {
+            cartItems.addAll(cart.getCartItems());
+        }
+
+        // Fetch user address from User microservice
+        ResponseEntity<UserDTO> userResponse = userClient.getUserById(userId);
+        if (!userResponse.hasBody() || userResponse.getBody() == null) {
+            throw new RuntimeException("User not found: " + userId);
+        }
+        UserDTO user = userResponse.getBody();
+        int addressId = user.getAddressId();
+
+        // Calculate total amount considering discounts
+        double totalAmount = cartItems.stream().mapToDouble(item -> {
+            ResponseEntity<ProductDTO> productResponse = productClient.getProductById(item.getProductId());
+            if (!productResponse.hasBody() || productResponse.getBody() == null) {
+                throw new RuntimeException("Product not found: " + item.getProductId());
+            }
+            ProductDTO product = productResponse.getBody();
+            double discountedPrice = product.getNewPrice() - (product.getNewPrice() * (product.getDiscount() / 100));
+            return discountedPrice * item.getQuantity();
+        }).sum();
+
+        // Save order
+        Order savedOrder = orderRepository.save(new Order(null, userId, totalAmount, "PLACED", addressId, LocalDate.now().plusDays(7), null, null));
+
+        // Save order items
+        List<OrderItemDTO> orderItemDTOs = cartItems.stream().map(cartItem -> {
+            ResponseEntity<ProductDTO> productResponse = productClient.getProductById(cartItem.getProductId());
+            ProductDTO product = productResponse.getBody();
+
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(savedOrder);
+            orderItem.setProductId(cartItem.getProductId());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItemRepository.save(orderItem);
+
+            return new OrderItemDTO(orderItem.getOrderItemId(), cartItem.getProductId(), product.getName(), cartItem.getQuantity(), product.getNewPrice(), product.getDiscount(), null, product.getImage());
+        }).collect(Collectors.toList());
+
+        // Convert to DTO and return response
+        OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setOrderId(savedOrder.getOrderId());
+        orderDTO.setUserId(userId);
+        orderDTO.setTotalAmount(totalAmount);
+        orderDTO.setOrderStatus("PLACED");
+        orderDTO.setDeliveryAddressId(addressId);
+        orderDTO.setDeliveryDate(savedOrder.getDeliveryDate());
+        orderDTO.setOrderItems(orderItemDTOs);
+
+        return orderDTO;
+    }
 
 
 {
