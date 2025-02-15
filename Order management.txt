@@ -88,6 +88,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -112,15 +113,16 @@ public class Order {
     @Column(nullable = false)
     private Integer deliveryAddressId;
 
+    @Column(nullable = false)
+    private LocalDate deliveryDate;  // Added field for delivery date
+
     @Column(updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private Timestamp createdAt;
-
-    @Column(insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
-    private Timestamp updatedAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItem> orderItems;
 }
+
 
 package com.genckart.entity;
 
@@ -147,11 +149,24 @@ public class OrderItem {
     private Integer productId;
 
     @Column(nullable = false)
+    private String productName; // Store product name to avoid extra service calls
+
+    @Column(nullable = false)
     private Integer quantity;
 
     @Column(nullable = false)
-    private Double price;
+    private Double price; // Original Price per unit
+
+    @Column(nullable = false)
+    private Double discount; // Discount in percentage
+
+    @Column(nullable = false)
+    private Double finalPrice; // (price - (price * discount / 100)) * quantity
+
+    @Column(updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private Timestamp createdAt;
 }
+
 
 package com.genckart.entity;
 
@@ -172,8 +187,9 @@ public class OrderHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer orderHistoryId;
 
-    @Column(nullable = false)
-    private Integer orderId;
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 
     @Column(nullable = false)
     private Integer userId;
@@ -184,6 +200,7 @@ public class OrderHistory {
     @Column(updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private Timestamp statusChangedAt;
 }
+
 
 
 package com.genckart.dto;
@@ -221,11 +238,17 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrderItemDTO {
+public class OrderItemDto {
+    private Integer orderItemId;
     private Integer productId;
+    private String productName;
     private Integer quantity;
     private Double price;
+    private Double discount;
+    private Double finalPrice; // Computed price after discount
+    private Timestamp createdAt;
 }
+
 
 package com.genckart.dto;
 
