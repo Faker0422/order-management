@@ -1,3 +1,35 @@
+ return orders.stream()
+            .map(order -> {
+                OrderDTO orderDTO = convertToDTO(order);
+                
+                // **Fetch order items explicitly to avoid LazyInitializationException**
+                List<OrderItemDTO> orderItemDTOs = orderItemRepository.findByOrderId(order.getOrderId())
+                        .stream()
+                        .map(this::convertToOrderItemDTO)
+                        .collect(Collectors.toList());
+                orderDTO.setOrderItems(orderItemDTOs);
+
+                // **Fetch order history explicitly**
+                List<OrderHistoryDTO> orderHistoryDTOs = orderHistoryRepository.findByOrderId(order.getOrderId())
+                        .stream()
+                        .map(this::convertToOrderHistoryDTO)
+                        .collect(Collectors.toList());
+                orderDTO.setOrderHistory(orderHistoryDTOs);
+
+                return orderDTO;
+            })
+            .collect(Collectors.toList());
+}
+
+
+
+
+
+
+
+
+
+
 package com.genckart.service.Impl;
 
 import com.genckart.clients.CartClient;
