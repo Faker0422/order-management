@@ -1,6 +1,3 @@
-Class 'OrderServiceImpl' must either be declared abstract or implement abstract method 'placeOrderFromProductDetail(Integer, Integer, Integer)' in 'OrderService'
-
-
 package com.genckart.service;
 
 import com.genckart.dto.*;
@@ -20,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class OrderService {
+public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -28,7 +25,7 @@ public class OrderService {
     private final UserClient userClient;
     private final ProductClient productClient;
 
-    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, CartClient cartClient, UserClient userClient, ProductClient productClient) {
+    public OrderServiceImpl(OrderRepository orderRepository, OrderItemRepository orderItemRepository, CartClient cartClient, UserClient userClient, ProductClient productClient) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.cartClient = cartClient;
@@ -36,6 +33,7 @@ public class OrderService {
         this.productClient = productClient;
     }
 
+    @Override
     public OrderDTO placeOrderFromCart(int userId) {
         // Fetch cart details from Cart microservice using OpenFeign
         ResponseEntity<List<CartDTO>> cartResponse = cartClient.getCartByUserId(userId);
@@ -64,13 +62,7 @@ public class OrderService {
                 .sum();
 
         // Create order entity
-        Order order = new Order();
-        order.setUserId(userId);
-        order.setTotalAmount(totalAmount);
-        order.setOrderStatus("PLACED");
-        order.setDeliveryAddressId(addressId);
-        order.setDeliveryDate(LocalDate.now().plusDays(7));
-        order = orderRepository.save(order);
+        final Order savedOrder = orderRepository.save(new Order(null, userId, totalAmount, "PLACED", addressId, LocalDate.now().plusDays(7), null, null));
 
         // Save order items and fetch product details (including discount and image)
         List<OrderItemDTO> orderItemDTOs = cartItems.stream().map(cartItem -> {
@@ -81,7 +73,7 @@ public class OrderService {
             ProductDTO product = productResponse.getBody();
             
             OrderItem orderItem = new OrderItem();
-            orderItem.setOrder(order);
+            orderItem.setOrder(savedOrder);
             orderItem.setProductId(cartItem.getProductId());
             orderItem.setQuantity(cartItem.getQuantity());
             orderItemRepository.save(orderItem);
@@ -91,15 +83,21 @@ public class OrderService {
 
         // Convert to DTO and return
         OrderDTO orderDTO = new OrderDTO();
-        orderDTO.setOrderId(order.getOrderId());
+        orderDTO.setOrderId(savedOrder.getOrderId());
         orderDTO.setUserId(userId);
         orderDTO.setTotalAmount(totalAmount);
         orderDTO.setOrderStatus("PLACED");
         orderDTO.setDeliveryAddressId(addressId);
-        orderDTO.setDeliveryDate(order.getDeliveryDate());
+        orderDTO.setDeliveryDate(savedOrder.getDeliveryDate());
         orderDTO.setOrderItems(orderItemDTOs);
 
         return orderDTO;
+    }
+
+    @Override
+    public OrderDTO placeOrderFromProductDetail(Integer userId, Integer productId, Integer quantity) {
+        // Implementation to handle placing an order from product details
+        throw new UnsupportedOperationException("Method not implemented yet");
     }
 }
 
