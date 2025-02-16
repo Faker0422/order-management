@@ -1,4 +1,82 @@
-  private OrderDTO convertToDTO(Order order) {
+ public OrderDTO placeOrderFromCart(Integer userId) {
+        // Fetch the cart details for the user
+        ResponseEntity<CartResponse> cartResponse = cartClient.getCartByUserId(userId);
+        if (!cartResponse.hasBody() || cartResponse.getBody().getCartItems() == null || cartResponse.getBody().getCartItems().isEmpty()) {
+            throw new IllegalStateException("Cart is empty or unavailable for user: " + userId);
+        }
+        List<CartItem> cartItems = cartResponse.getBody().getCartItems();
+
+        // Fetch the user's delivery address
+        ResponseEntity<AddressDTO> addressResponse = userClient.getUserAddress(userId);
+        if (!addressResponse.hasBody()) {
+            throw new IllegalStateException("Delivery address not found for user: " + userId);
+        }
+        AddressDTO deliveryAddress = addressResponse.getBody();
+
+        // Create and save the order
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setDeliveryAddressId(deliveryAddress.getAddressId());
+        order.setDeliveryDate(LocalDate.now().plusDays(7));
+        order.setOrderStatus("CREATED");
+        order.setCreatedAt(LocalDateTime.now());
+
+        order = orderRepository.save(order); // Save order to get generated ID
+
+        // Process each cart item into an OrderItem
+        List<OrderItem> orderItems = new ArrayList<>();
+        double totalAmount = 0.0;
+
+        for (CartItem cartItem : cartItems) {
+            // Fetch product details
+            ResponseEntity<ProductDTO> productResponse = productClient.getProductById(cartItem.getProductId());
+            if (!productResponse.hasBody()) {
+                throw new IllegalStateException("Product details not found for productId: " + cartItem.getProductId());
+            }
+            ProductDTO product = productResponse.getBody();
+
+            // Extract product details
+            double price = product.getNewPrice();
+            double discount = product.getDiscount();
+            String productName = product.getName();
+
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setProductId(cartItem.getProductId());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setPrice(price);
+            orderItem.setDiscount(discount);
+            orderItem.setProductName(productName);
+
+            orderItems.add(orderItem);
+            totalAmount += price * cartItem.getQuantity();
+        }
+
+        // Save order items and update total amount
+        orderItemRepository.saveAll(orderItems);
+        order.setTotalAmount(totalAmount);
+        orderRepository.save(order);
+
+        // Convert order to DTO and return it
+        return convertToDTO(order);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+private OrderDTO convertToDTO(Order order) {
         OrderDTO orderDTO = new OrderDTO();
         orderDTO.setOrderId(order.getOrderId());
         orderDTO.setUserId(order.getUserId());
