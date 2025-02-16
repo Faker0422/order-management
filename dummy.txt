@@ -1,3 +1,121 @@
+
+@Service
+@RequiredArgsConstructor
+public class OrderService {
+
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final CartServiceFeignClient cartServiceFeignClient;
+    private final UserServiceFeignClient userServiceFeignClient;
+    private final ProductServiceFeignClient productServiceFeignClient;
+
+    @Transactional
+    public ResponseEntity<OrderDTO> placeOrderFromCart(@RequestBody Integer userId) {
+        // Fetch user details including address
+        ResponseEntity<UserDTO> userResponse = userServiceFeignClient.getUserById(userId);
+        if (userResponse.getStatusCode() != HttpStatus.OK || userResponse.getBody() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        UserDTO user = userResponse.getBody();
+
+        // Fetch cart details
+        ResponseEntity<CartDTO> cartResponse = cartServiceFeignClient.getCartByUserId(userId);
+        if (cartResponse.getStatusCode() != HttpStatus.OK || cartResponse.getBody() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        CartDTO cart = cartResponse.getBody();
+
+        List<CartItemDTO> cartItems = cart.getCartItems();
+        if (cartItems.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+
+        // Calculate total amount
+        double totalAmount = 0.0;
+        List<OrderItem> orderItems = new ArrayList<>();
+        List<OrderItemDTO> orderItemDTOs = new ArrayList<>();
+
+        for (CartItemDTO cartItem : cartItems) {
+            ResponseEntity<ProductDTO> productResponse = productServiceFeignClient.getProductById(cartItem.getProductId());
+            if (productResponse.getStatusCode() != HttpStatus.OK || productResponse.getBody() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+            ProductDTO product = productResponse.getBody();
+
+            double itemPrice = product.getNewPrice() - (product.getNewPrice() * (product.getDiscount() / 100));
+            double itemTotal = itemPrice * cartItem.getQuantity();
+            totalAmount += itemTotal;
+
+            // Create order item
+            OrderItem orderItem = new OrderItem();
+            orderItem.setProductId(product.getProductId());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItems.add(orderItem);
+
+            // Create OrderItemDTO with product details
+            OrderItemDTO orderItemDTO = new OrderItemDTO();
+            orderItemDTO.setProductId(product.getProductId());
+            orderItemDTO.setProductName(product.getName());
+            orderItemDTO.setQuantity(cartItem.getQuantity());
+            orderItemDTO.setPrice(product.getNewPrice());
+            orderItemDTO.setDiscount(product.getDiscount());
+            orderItemDTO.setImage(product.getImage());
+
+            orderItemDTOs.add(orderItemDTO);
+        }
+
+        // Create order
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setTotalAmount(totalAmount);
+        order.setOrderStatus("PLACED");
+        order.setDeliveryAddressId(user.getAddressId());
+        order.setDeliveryDate(LocalDate.now().plusDays(7));
+        order.setOrderItems(orderItems);
+
+        // Save order and order items
+        Order savedOrder = orderRepository.save(order);
+        orderItems.forEach(item -> item.setOrder(savedOrder));
+        orderItemRepository.saveAll(orderItems);
+
+        // Create OrderDTO
+        OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setOrderId(savedOrder.getOrderId());
+        orderDTO.setUserId(savedOrder.getUserId());
+        orderDTO.setTotalAmount(savedOrder.getTotalAmount());
+        orderDTO.setOrderStatus(savedOrder.getOrderStatus());
+        orderDTO.setDeliveryAddressId(savedOrder.getDeliveryAddressId());
+        orderDTO.setDeliveryDate(savedOrder.getDeliveryDate());
+        orderDTO.setOrderItems(orderItemDTOs);
+
+        return ResponseEntity.ok(orderDTO);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public OrderDTO placeOrderFromCart(Integer userId) {
         // Fetch cart details from Cart microservice using OpenFeign
         ResponseEntity<CartDTO> cartResponse = cartClient.getCartByUserId(userId);
