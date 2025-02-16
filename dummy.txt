@@ -1,4 +1,78 @@
 
+@Transactional
+public OrderDTO placeOrderFromProductDetailPage(@RequestBody OrderDTO orderDTO) {
+    Integer userId = orderDTO.getUserId();
+
+    // Fetch user details (including address)
+    ResponseEntity<UserDTO> userResponse = userClient.getUserById(userId);
+    if (!userResponse.getStatusCode().is2xxSuccessful() || userResponse.getBody() == null) {
+        throw new RuntimeException("Failed to fetch user details.");
+    }
+
+    UserDTO user = userResponse.getBody();
+    Integer deliveryAddressId = user.getAddressId(); // Extract addressId from UserDTO
+
+    double totalAmount = 0.0;
+    List<OrderItem> orderItems = new ArrayList<>();
+
+    // Process each order item
+    for (OrderItemDTO itemDTO : orderDTO.getOrderItems()) {
+        ResponseEntity<ProductDTO> productResponse = productClient.getProductById(itemDTO.getProductId());
+        if (!productResponse.getStatusCode().is2xxSuccessful() || productResponse.getBody() == null) {
+            throw new RuntimeException("Failed to fetch product details for productId: " + itemDTO.getProductId());
+        }
+
+        ProductDTO product = productResponse.getBody();
+
+        // ✅ Set total price directly to newPrice (ignoring discount and quantity)
+        double totalPrice = product.getNewPrice();
+
+        // Create OrderItem entity
+        OrderItem orderItem = new OrderItem();
+        orderItem.setProductId(product.getProductId());
+        orderItem.setQuantity(itemDTO.getQuantity()); // Storing quantity
+        orderItem.setOrder(order); // Associate with order
+
+        orderItems.add(orderItem);
+        totalAmount += totalPrice; // ✅ Add newPrice to total order amount
+    }
+
+    // Create and save Order entity
+    Order order = new Order();
+    order.setUserId(userId);
+    order.setTotalAmount(totalAmount);
+    order.setOrderStatus("PLACED");
+    order.setDeliveryAddressId(deliveryAddressId);
+    order.setDeliveryDate(LocalDate.now().plusDays(7));
+    order = orderRepository.save(order);
+
+    // Associate and save order items
+    for (OrderItem item : orderItems) {
+        item.setOrder(order);
+    }
+    orderItemRepository.saveAll(orderItems);
+
+    // Convert and return DTO (including order and order items)
+    return convertToDTO(order);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Service
 @RequiredArgsConstructor
 public class OrderService {
