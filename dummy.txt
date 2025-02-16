@@ -1,4 +1,90 @@
- public OrderDTO placeOrderFromCart(Integer userId) {
+
+@Service
+@RequiredArgsConstructor
+public class OrderService {
+
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderHistoryRepository orderHistoryRepository;
+    private final UserClient userClient;
+    private final ProductClient productClient;
+
+    @Transactional
+    public OrderDTO placeOrderFromProductDetailPage(@RequestBody OrderDTO orderDTO) {
+        Integer userId = orderDTO.getUserId();
+
+        // Fetch user address
+        ResponseEntity<AddressDTO> addressResponse = userClient.getUserAddress(userId);
+        if (!addressResponse.getStatusCode().is2xxSuccessful() || addressResponse.getBody() == null) {
+            throw new RuntimeException("Failed to fetch user address.");
+        }
+        Integer deliveryAddressId = addressResponse.getBody().getAddressId();
+
+        double totalAmount = 0.0;
+        List<OrderItem> orderItems = new ArrayList<>();
+
+        // Process each order item
+        for (OrderItemDTO itemDTO : orderDTO.getOrderItems()) {
+            ResponseEntity<ProductDTO> productResponse = productClient.getProductById(itemDTO.getProductId());
+            if (!productResponse.getStatusCode().is2xxSuccessful() || productResponse.getBody() == null) {
+                throw new RuntimeException("Failed to fetch product details for productId: " + itemDTO.getProductId());
+            }
+
+            ProductDTO product = productResponse.getBody();
+            double effectivePrice = product.getNewPrice() - (product.getDiscount() != null ? product.getDiscount() : 0);
+            double itemTotal = effectivePrice * itemDTO.getQuantity();
+            totalAmount += itemTotal;
+
+            // Create OrderItem entity
+            OrderItem orderItem = new OrderItem();
+            orderItem.setProductId(product.getProductId());
+            orderItem.setQuantity(itemDTO.getQuantity());
+            orderItems.add(orderItem);
+        }
+
+        // Create and save Order entity
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setTotalAmount(totalAmount);
+        order.setOrderStatus("PLACED");
+        order.setDeliveryAddressId(deliveryAddressId);
+        order.setDeliveryDate(LocalDate.now().plusDays(7));
+        order = orderRepository.save(order);
+
+        // Associate and save order items
+        for (OrderItem item : orderItems) {
+            item.setOrder(order);
+        }
+        orderItemRepository.saveAll(orderItems);
+
+        // Create OrderHistory entry
+        OrderHistory orderHistory = new OrderHistory();
+        orderHistory.setOrder(order);
+        orderHistory.setUserId(userId);
+        orderHistory.setOrderStatus("PLACED");
+        orderHistoryRepository.save(orderHistory);
+
+        // Convert and return DTO
+        return convertToDTO(order);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public OrderDTO placeOrderFromCart(Integer userId) {
         // Fetch the cart details for the user
         ResponseEntity<CartResponse> cartResponse = cartClient.getCartByUserId(userId);
         if (!cartResponse.hasBody() || cartResponse.getBody().getCartItems() == null || cartResponse.getBody().getCartItems().isEmpty()) {
