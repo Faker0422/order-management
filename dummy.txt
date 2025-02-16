@@ -1,4 +1,77 @@
 
+ public ResponseEntity<OrderDTO> placeOrderFromProductDetailPage(OrderDTO orderDTO) {
+        // Fetch user address from User microservice using Feign
+        AddressDTO userAddress = userServiceClient.getUserAddress(orderDTO.getUserId());
+
+        // Fetch product details from Product microservice and calculate total amount
+        double totalAmount = 0.0;
+        for (OrderItemDTO item : orderDTO.getOrderItems()) {
+            ProductDTO product = productServiceClient.getProductById(item.getProductId());
+
+            if (product != null) {
+                double price = product.getNewPrice();
+                double discount = product.getDiscount() != null ? product.getDiscount() : 0.0;
+                totalAmount += (price - (price * discount / 100)) * item.getQuantity();
+            }
+        }
+
+        // Set delivery date to 7 days from now
+        LocalDate deliveryDate = LocalDate.now().plusDays(7);
+
+        // Create and save the order
+        Order order = new Order();
+        order.setUserId(orderDTO.getUserId());
+        order.setTotalAmount(totalAmount);
+        order.setOrderStatus("PLACED");
+        order.setDeliveryAddressId(userAddress != null ? userAddress.getAddressId() : null);
+        order.setDeliveryDate(deliveryDate);
+        order = orderRepository.save(order);
+
+        // Create and save order items
+        List<OrderItem> orderItems = orderDTO.getOrderItems().stream().map(itemDTO -> {
+            OrderItem item = new OrderItem();
+            item.setOrder(order);
+            item.setProductId(itemDTO.getProductId());
+            item.setQuantity(itemDTO.getQuantity());
+            return orderItemRepository.save(item);
+        }).collect(Collectors.toList());
+
+        // Create and save order history
+        OrderHistory orderHistory = new OrderHistory();
+        orderHistory.setOrder(order);
+        orderHistory.setUserId(order.getUserId());
+        orderHistory.setOrderStatus("PLACED");
+        orderHistoryRepository.save(orderHistory);
+
+        // Prepare the response
+        OrderDTO responseDTO = new OrderDTO();
+        responseDTO.setOrderId(order.getOrderId());
+        responseDTO.setUserId(order.getUserId());
+        responseDTO.setTotalAmount(order.getTotalAmount());
+        responseDTO.setOrderStatus(order.getOrderStatus());
+        responseDTO.setDeliveryAddressId(order.getDeliveryAddressId());
+        responseDTO.setDeliveryDate(order.getDeliveryDate());
+        responseDTO.setOrderItems(orderDTO.getOrderItems());
+        responseDTO.setOrderHistory(List.of(new OrderHistoryDTO(orderHistory.getOrderHistoryId(), order.getOrderId(), order.getUserId(), order.getOrderStatus(), null)));
+
+        return ResponseEntity.ok(responseDTO);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Transactional
 public OrderDTO placeOrderFromProductDetailPage(@RequestBody OrderDTO orderDTO) {
     Integer userId = orderDTO.getUserId();
