@@ -1,3 +1,141 @@
+<div class="container mt-4">
+  <h2 class="mb-4">Your Orders</h2>
+
+  <!-- Order Filters -->
+  <div class="mb-4">
+    <button class="btn btn-outline-secondary me-2">Not Yet Shipped</button>
+    <button class="btn btn-outline-secondary me-2">Cancelled Orders</button>
+    <button class="btn btn-outline-secondary">Past 1 Year</button>
+  </div>
+
+  <!-- Order List -->
+  <div *ngFor="let order of orders" class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <div>
+        <span class="me-3"><strong>Order Date:</strong> {{ order.orderDate }}</span>
+        <span class="me-3"><strong>Total Amount:</strong> {{ order.totalAmount }}</span>
+        <span><strong>Ship To:</strong> {{ order.shipTo }}</span>
+      </div>
+      <div>
+        <button class="btn btn-outline-primary btn-sm me-2">View Invoice</button>
+        <button class="btn btn-outline-primary btn-sm">View Order</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-2">
+          <img [src]="order.product.image" alt="{{ order.product.name }}" class="img-fluid rounded">
+        </div>
+        <div class="col-md-10">
+          <h5 class="card-title">{{ order.product.name }}</h5>
+          <p class="card-text"><strong>Delivered:</strong> {{ order.deliveredDate }}</p>
+          <p class="card-text"><strong>Return or Replace:</strong> {{ order.returnEligible }}</p>
+          <div>
+            <button class="btn btn-outline-success btn-sm me-2">Buy It Again</button>
+            <button class="btn btn-outline-info btn-sm">View Product</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-order-history',
+  templateUrl: './order-history.component.html',
+  styleUrls: ['./order-history.component.css']
+})
+export class OrderHistoryComponent {
+  orders = [
+    {
+      orderDate: 'Mar 18, 2023',
+      totalAmount: '$859.00',
+      shipTo: 'Rajkot, Gujrat, India',
+      orderNumber: '#25610235901',
+      product: {
+        name: 'OnePlus 12R (Iron Gray, 8GB RAM, 256GB Storage)',
+        image: 'https://via.placeholder.com/150' // Example image URL
+      },
+      deliveredDate: 'Delivered May 10',
+      returnEligible: 'Eligible through July 12, 2023'
+    },
+    {
+      orderDate: 'Jan 21, 2022',
+      totalAmount: '$1200.00',
+      shipTo: 'Rajkot, Gujrat, India',
+      orderNumber: '#25610235901',
+      product: {
+        name: 'Apple 2023 MacBook Pro (16-inch, M3 Max chip with 16-core CPU and 40-core GPU, 48GB Unified Memory, 1TB) – Space Black',
+        image: 'https://via.placeholder.com/150' // Example image URL
+      },
+      deliveredDate: 'Delivered May 10',
+      returnEligible: 'Eligible through July 12, 2023'
+    }
+  ];
+}
+
+
+
+
+
+
+
+/* Custom styles for the order history page */
+.card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.btn-outline-success {
+  color: #28a745;
+  border-color: #28a745;
+}
+
+.btn-outline-success:hover {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-outline-info {
+  color: #17a2b8;
+  border-color: #17a2b8;
+}
+
+.btn-outline-info:hover {
+  background-color: #17a2b8;
+  color: white;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 https://in.pinterest.com/pin/444519425740309767/
 
 
