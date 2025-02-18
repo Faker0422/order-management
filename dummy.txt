@@ -1,3 +1,41 @@
+PS C:\JAVA\order-service\src\app\services> cd ..
+Odd numbered Node.js versions will not enter LTS status and should not be used for production. For more information, please see https://nodejs.org/en/about/previous-releases/.  
+Component HMR has been enabled.
+If you encounter application reload issues, you can manually reload the page to bypass HMR and/or disable this feature with the `--no-hmr` command line option.
+Please consider reporting any issues you encounter here: https://github.com/angular/angular-cli/issues
+
+Application bundle generation failed. [5.748 seconds]      
+
+X [ERROR] TS-996008: Component AppComponent is standalone, and cannot be declared in an NgModule. Did you mean to import it instead? [plugin angular-compiler]
+
+    src/app/app.module.ts:12:4:
+      12 │     AppComponent,
+         ╵     ~~~~~~~~~~~~
+
+
+X [ERROR] TS-996008: Component OrderHistoryComponent is standalone, and cannot be declared in an NgModule. Did you mean to import it instead? [plugin angular-compiler]
+
+    src/app/app.module.ts:13:4:
+      13 │     OrderHistoryComponent,
+         ╵     ~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] TS-996008: Component OrderItemComponent is standalone, and cannot be declared in an NgModule. Did you mean to import it instead? [plugin angular-compiler]
+
+    src/app/app.module.ts:14:4:
+      14 │     OrderItemComponent,
+         ╵     ~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+
+
+
+
+
+
 
 export interface Order {
   orderId: number;
