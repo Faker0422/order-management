@@ -1,3 +1,147 @@
+<div class="order-history-container">
+  <h2>Order History</h2>
+  <div class="filters">
+    <span>All Order</span>
+    <span>Summary</span>
+    <span>Completed</span>
+    <span>Cancelled</span>
+  </div>
+
+  <div *ngFor="let order of orders" class="order-card">
+    <div class="order-header">
+      <p><strong>Order: #{{ order.orderId }}</strong></p>
+      <p>Order Payment: {{ order.orderDate }}</p>
+    </div>
+    
+    <div *ngFor="let item of order.orderItems">
+      <app-order-item [item]="item" [orderStatus]="order.orderStatus" [deliveryDate]="order.deliveryDate"></app-order-item>
+    </div>
+
+    <p class="total-amount">Total: ${{ order.totalAmount }}</p>
+  </div>
+</div>
+
+
+.order-history-container {
+  padding: 20px;
+}
+
+.filters {
+  display: flex;
+  gap: 20px;
+  font-size: 18px;
+}
+
+.order-card {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-top: 10px;
+}
+
+.total-amount {
+  font-weight: bold;
+}
+
+
+<div class="order-item">
+  <img [src]="item.productImage" alt="{{ item.productName }}" class="product-image">
+  
+  <div class="item-details">
+    <h3>{{ item.productName }}</h3>
+    <p>By: {{ item.seller }}</p>
+    <p>Size: {{ item.size }} | Qty: {{ item.quantity }}</p>
+    <p class="price">Price ${{ item.price }}</p>
+  </div>
+
+  <div class="status">
+    <p>Status</p>
+    <p [ngStyle]="{ 'color': getStatusColor() }">{{ orderStatus }}</p>
+  </div>
+
+  <div class="delivery">
+    <p>Delivery Expected by</p>
+    <p><strong>{{ deliveryDate }}</strong></p>
+  </div>
+
+  <button class="btn-invoice">Show Invoice</button>
+  <button class="btn-buy">Buy Now</button>
+</div>
+
+.order-item {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #ddd;
+  padding: 10px;
+  gap: 20px;
+}
+
+.product-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+}
+
+.item-details {
+  flex-grow: 1;
+}
+
+.status p {
+  font-size: 14px;
+}
+
+.delivery p {
+  font-size: 14px;
+}
+
+.btn-invoice {
+  background: white;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.btn-buy {
+  background: blue;
+  color: white;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .order-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <div class="order-list-container">
   <h2>My Orders</h2>
   <div *ngFor="let order of orders" class="order-card">
