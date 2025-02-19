@@ -1,57 +1,35 @@
+import { Component, OnInit } from '@angular/core';
+import { OrderService } from '../../services/order.service';
+import { Order } from '../../models/order.model';
 
-X [ERROR] NG9: Property 'applyFilter' does not exist on type 'OrderListComponent'. [plugin angular-compiler]
+@Component({
+  selector: 'app-order-list',
+  templateUrl: './order-list.component.html',
+  styleUrls: ['./order-list.component.css']
+})
+export class OrderListComponent implements OnInit {
+  orders: Order[] = [];
+  filteredOrders: Order[] = [];
+  filterStatus: string = 'all';
 
-    src/app/components/order-list/order-list.component.html:4:23:
-      4 │       <button (click)="applyFilter('not yet shipped')">Not Yet Ship...
-        ╵                        ~~~~~~~~~~~        
+  constructor(private orderService: OrderService) {}
 
-  Error occurs in the template of component OrderListComponent.
+  ngOnInit(): void {
+    this.orderService.getOrders().subscribe(data => {
+      this.orders = data;
+      this.filteredOrders = data; // Initialize filteredOrders with all orders
+    });
+  }
 
-    src/app/components/order-list/order-list.component.ts:6:15:
-      6 │   templateUrl: './order-list.component.html',
-        ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-X [ERROR] NG9: Property 'applyFilter' does not exist on type 'OrderListComponent'. [plugin angular-compiler]
-
-    src/app/components/order-list/order-list.component.html:5:23:
-      5 │       <button (click)="applyFilter('cancelled')">Cancelled Orders</...
-        ╵                        ~~~~~~~~~~~        
-
-  Error occurs in the template of component OrderListComponent.
-
-    src/app/components/order-list/order-list.component.ts:6:15:
-      6 │   templateUrl: './order-list.component.html',
-        ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-X [ERROR] NG9: Property 'applyFilter' does not exist on type 'OrderListComponent'. [plugin angular-compiler]
-
-    src/app/components/order-list/order-list.component.html:6:23:
-      6 │       <button (click)="applyFilter('delivered')">Delivered</button>
-        ╵                        ~~~~~~~~~~~        
-
-  Error occurs in the template of component OrderListComponent.
-
-    src/app/components/order-list/order-list.component.ts:6:15:
-      6 │   templateUrl: './order-list.component.html',
-        ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-X [ERROR] NG9: Property 'filteredOrders' does not exist on type 'OrderListComponent'. [plugin angular-compiler]
-
-    src/app/components/order-list/order-list.component.html:8:30:
-      8 │     <div *ngFor="let order of filteredOrders" class="order-item">
-        ╵                               ~~~~~~~~~~~~~~
-
-  Error occurs in the template of component OrderListComponent.
-
-    src/app/components/order-list/order-list.component.ts:6:15:
-      6 │   templateUrl: './order-list.component.html',
-        ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
+  applyFilter(status: string): void {
+    this.filterStatus = status;
+    if (status === 'all') {
+      this.filteredOrders = this.orders;
+    } else {
+      this.filteredOrders = this.orders.filter(order => order.orderStatus === status);
+    }
+  }
+}
 
 
 
