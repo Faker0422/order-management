@@ -1,1 +1,144 @@
+
+<div class="order-list">
+  <div class="filters">
+    <button (click)="applyFilter('all')">All Orders</button>
+    <button (click)="applyFilter('not yet shipped')">Not Yet Shipped</button>
+    <button (click)="applyFilter('cancelled')">Cancelled Orders</button>
+    <button (click)="applyFilter('delivered')">Delivered</button>
+  </div>
+  <div *ngFor="let order of filteredOrders" class="order-item">
+    <div class="order-header">
+      <span class="order-id">Order #{{ order.orderId }}</span>
+      <span class="order-date">Order Date: {{ order.createdAt | date }}</span>
+    </div>
+    <div class="order-details">
+      <img src="assets/images/decoration_flower_port.jpg" alt="Decoration Flower Port">
+      <div class="order-info">
+        <span class="status" [ngClass]="{
+          'delivered': order.orderStatus === 'delivered',
+          'cancelled': order.orderStatus === 'cancelled',
+          'pending': order.orderStatus === 'not yet shipped'
+        }">{{ order.orderStatus }}</span>
+        <span class="delivery-date">Delivery Date: {{ order.deliveryDate | date }}</span>
+        <span class="total-amount">Total Amount: ${{ order.totalAmount }}</span>
+      </div>
+    </div>
+    <div class="order-items">
+      <h3>Items:</h3>
+      <div *ngFor="let item of order.orderItems" class="item">
+        <span class="product-name">{{ item.productName }}</span>
+        <span class="quantity">Quantity: {{ item.quantity }}</span>
+        <span class="price">Price: ${{ item.price }}</span>
+      </div>
+    </div>
+    <button class="view-order">View Order</button>
+  </div>
+</div>
+
+
+
+.order-list {
+  padding: 20px;
+}
+
+.filters {
+  margin-bottom: 20px;
+}
+
+.filters button {
+  margin-right: 10px;
+}
+
+.order-item {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.order-details {
+  display: flex;
+  align-items: center;
+}
+
+.order-details img {
+  width: 100px;
+  margin-right: 20px;
+}
+
+.order-info {
+  flex-grow: 1;
+}
+
+.status {
+  padding: 5px;
+  border-radius: 5px;
+  color: white;
+}
+
+.delivered {
+  background-color: green;
+}
+
+.cancelled {
+  background-color: red;
+}
+
+.pending {
+  background-color: blue;
+}
+
+.order-items {
+  margin-top: 10px;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.view-order {
+  margin-top: 10px;
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .order-details {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .order-details img {
+    margin-bottom: 10px;
+  }
+
+  .item {
+    flex-direction: column;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 https://pagedone.io/blocks/e-commerce/order-history
