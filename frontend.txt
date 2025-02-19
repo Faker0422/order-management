@@ -1,4 +1,65 @@
 
+X [ERROR] NG9: Property 'applyFilter' does not exist on type 'OrderListComponent'. [plugin angular-compiler]
+
+    src/app/components/order-list/order-list.component.html:4:23:
+      4 │       <button (click)="applyFilter('not yet shipped')">Not Yet Ship...
+        ╵                        ~~~~~~~~~~~        
+
+  Error occurs in the template of component OrderListComponent.
+
+    src/app/components/order-list/order-list.component.ts:6:15:
+      6 │   templateUrl: './order-list.component.html',
+        ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] NG9: Property 'applyFilter' does not exist on type 'OrderListComponent'. [plugin angular-compiler]
+
+    src/app/components/order-list/order-list.component.html:5:23:
+      5 │       <button (click)="applyFilter('cancelled')">Cancelled Orders</...
+        ╵                        ~~~~~~~~~~~        
+
+  Error occurs in the template of component OrderListComponent.
+
+    src/app/components/order-list/order-list.component.ts:6:15:
+      6 │   templateUrl: './order-list.component.html',
+        ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] NG9: Property 'applyFilter' does not exist on type 'OrderListComponent'. [plugin angular-compiler]
+
+    src/app/components/order-list/order-list.component.html:6:23:
+      6 │       <button (click)="applyFilter('delivered')">Delivered</button>
+        ╵                        ~~~~~~~~~~~        
+
+  Error occurs in the template of component OrderListComponent.
+
+    src/app/components/order-list/order-list.component.ts:6:15:
+      6 │   templateUrl: './order-list.component.html',
+        ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] NG9: Property 'filteredOrders' does not exist on type 'OrderListComponent'. [plugin angular-compiler]
+
+    src/app/components/order-list/order-list.component.html:8:30:
+      8 │     <div *ngFor="let order of filteredOrders" class="order-item">
+        ╵                               ~~~~~~~~~~~~~~
+
+  Error occurs in the template of component OrderListComponent.
+
+    src/app/components/order-list/order-list.component.ts:6:15:
+      6 │   templateUrl: './order-list.component.html',
+        ╵                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+
+
+
+
+
+
 <div class="order-list">
   <div class="filters">
     <button (click)="applyFilter('all')">All Orders</button>
