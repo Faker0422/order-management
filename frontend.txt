@@ -1,3 +1,119 @@
+<div class="order-list-container">
+  <h2>My Orders</h2>
+  <div *ngFor="let order of orders" class="order-card">
+    <app-order-item [order]="order"></app-order-item>
+  </div>
+</div>
+
+
+
+
+.order-list-container {
+  width: 80%;
+  margin: auto;
+}
+
+.order-card {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .order-list-container {
+    width: 95%;
+  }
+}
+
+
+
+import { Component, Input } from '@angular/core';
+import { Order } from '../../models/order.model';
+
+@Component({
+  selector: 'app-order-item',
+  templateUrl: './order-item.component.html',
+  styleUrls: ['./order-item.component.scss']
+})
+export class OrderItemComponent {
+  @Input() order!: Order;
+
+  getStatusColor(status: string): string {
+    switch (status.toLowerCase()) {
+      case 'delivered':
+        return 'green';
+      case 'cancelled':
+        return 'red';
+      case 'pending':
+        return 'blue';
+      default:
+        return 'black';
+    }
+  }
+}
+
+
+
+<div class="order-item">
+  <div class="order-details">
+    <p><strong>Order ID:</strong> {{ order.orderId }}</p>
+    <p><strong>Total Amount:</strong> ${{ order.totalAmount }}</p>
+    <p><strong>Delivery Date:</strong> {{ order.deliveryDate }}</p>
+    <p>
+      <strong>Status:</strong>
+      <span [ngStyle]="{ 'color': getStatusColor(order.orderStatus) }">
+        {{ order.orderStatus }}
+      </span>
+    </p>
+  </div>
+</div>
+
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.order-details p {
+  margin: 5px 0;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .order-item {
+    flex-direction: column;
+  }
+}
+
+
+
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+}
+
+
+
+
+
+
+
+
 import { Component, OnInit } from '@angular/core';
 import { OrderService } from '../../services/order.service';
 import { Order } from '../../models/order.model';
