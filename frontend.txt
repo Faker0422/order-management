@@ -1,4 +1,1891 @@
 <div class="order-history-container">
+
+    <h2>Order History</h2>
+
+    <div class="filters">
+
+        <button
+
+            class="filter-item"
+
+            [class.active]="selectedFilter === 'all'"
+
+            (click)="setFilter('all')"
+
+        >All Order</button>
+
+        <button
+
+            class="filter-item"
+
+            [class.active]="selectedFilter === 'inProgress'"
+
+            (click)="setFilter('inProgress')"
+
+        >In Progress</button>
+
+        <button
+
+            class="filter-item"
+
+            [class.active]="selectedFilter === 'Delivered'"
+
+            (click)="setFilter('Delivered')"
+
+        >Delivered</button>
+
+        <button
+
+            class="filter-item"
+
+            [class.active]="selectedFilter === 'Cancelled'"
+
+            (click)="setFilter('Cancelled')"
+
+        >Cancelled</button>
+
+    </div>
+
+    <div *ngIf="!isAnyFilterEmpty(); else emptyStateTemplate">
+
+    <div *ngFor="let order of filteredOrders" class="order-card">
+
+      <div class="order-header">
+
+        <p><strong>Order: #{{ order.orderId }}</strong></p>
+
+        <p>Order Date: {{ order.createdAt | date:'yyyy-MM-dd' }}</p>
+
+        <button class="btn-buy">View Order</button>
+
+      </div>
+
+     
+
+      <div *ngFor="let item of order.orderItems">
+
+        <app-order-item [item]="item" [orderStatus]="order.orderStatus" [deliveryDate]="order.deliveryDate"></app-order-item>
+
+      </div>
+
+ 
+
+      <p class="total-amount">Total: ${{ order.totalAmount }}</p>
+
+    </div>
+
+  </div>
+
+  <ng-template #emptyStateTemplate>
+
+    <div class="empty-order-state">
+
+        <i class="bi" [class]="getEmptyStateIcon()" style="font-size: 3rem;"></i> <br> <br>
+
+        <p class="empty-order-message">{{ getEmptyStateMessage() }}</p>
+
+        <p class="empty-order-message">You can browse our products and place an order.</p>
+
+        </div>
+
+</ng-template>
+
+
+
+</div>
+
+/* src/app/components/order-list/order-list.component.css */
+
+.order-history-container {
+
+    padding: 20px; /* Reduced padding for responsiveness */
+
+    width: 95%; /* Make container width responsive */
+
+    max-width: 1200px; /* Optional: Maximum width for larger screens */
+
+    margin-left: auto;
+
+    margin-right: auto; /* Center the container */
+
+}
+
+
+
+.filters {
+
+    display: flex;
+
+    gap: 15px; /* Reduced gap for responsiveness */
+
+    font-size: 16px; /* Slightly reduced font size for responsiveness */
+
+    margin-bottom: 20px;
+
+    flex-wrap: wrap; /* Allow filters to wrap on smaller screens */
+
+    justify-content: center; /* Center filters on smaller screens */
+
+}
+
+
+
+.filter-item {
+
+    cursor: pointer;
+
+    padding: 8px 12px; /* Slightly reduced padding for buttons */
+
+    border: 1px solid #ccc;
+
+    border-radius: 5px;
+
+    color: #333;
+
+    font-size: 14px; /* Further reduce font size on buttons */
+
+    white-space: nowrap; /* Prevent text from wrapping in buttons */
+
+}
+
+
+
+.filter-item:hover {
+
+    background-color: #f0f0f0;
+
+}
+
+
+
+.filter-item.active {
+
+    background-color: #ff9800;
+
+    color: white;
+
+    border-color: #ff9800;
+
+}
+
+.filter-item:hover{
+
+    color: white;
+
+    background-color: black;
+
+    border-color: black;
+
+
+
+}
+
+
+
+.order-card {
+
+    border: 1px solid #ddd;
+
+    padding: 100px;
+
+    padding-top: 15px;
+
+    padding-bottom: 15px;
+
+    margin-top: 15px; /* Increased margin-top for spacing */
+
+    margin-bottom: 15px; /* Added margin-bottom for spacing */
+
+}
+
+
+
+.order-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    height: auto; /* Changed height to auto for responsiveness */
+
+    margin-bottom: 10px; /* Added margin-bottom */
+
+    padding-bottom: 10px; /* Added padding-bottom */
+
+}
+
+
+
+.order-header p {
+
+    margin: 0; /* Remove default paragraph margins in header */
+
+    font-size: 1rem; /* Adjusted font size in header */
+
+}
+
+
+
+
+
+.btn-buy {
+
+    background: #ff9800;
+
+    color: black;
+
+    border: none;
+
+    font-weight: bold;
+
+    border-radius: 8px;
+
+    padding: 8px 15px;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+
+    margin-top: 10px; /* Adjusted margin-top for button */
+
+    margin-bottom: 10px; /* Adjusted margin-bottom for button */
+
+    margin-left: 0; /* Reset left margin */
+
+    margin-right: 0; /* Reset right margin */
+
+    white-space: nowrap; /* Prevent button text wrapping */
+
+    font-size: 0.9rem; /* Reduced button font size */
+
+}
+
+.btn-buy:hover{
+
+    color: white;
+
+    background-color: black;
+
+
+
+}
+
+
+
+b, strong {
+
+    font-weight: bolder;
+
+    margin-left: 0; /* Reset left margin for strong/bold text */
+
+}
+
+
+
+.total-amount {
+
+    font-weight: bold;
+
+    margin-left: 0; /* Reset left margin for total amount */
+
+    text-align: right; /* Align total amount to the right */
+
+    margin-top: 10px;
+
+    margin-right: 10px; /* Added margin-top for total amount */
+
+}
+
+/* Empty State Styles (Bootstrap-inspired) */
+
+.empty-order-state {
+
+    text-align: center;
+
+    padding: 30px;
+
+    border: 1px dashed #ccc;
+
+    border-radius: 5px;
+
+    margin-top: 20px;
+
+    color: #6c757d; /* Bootstrap secondary text color */
+
+}
+
+
+
+.empty-order-message {
+
+    font-size: 1.25rem; /* Slightly larger font size */
+
+    margin-top: 15px;
+
+    margin-bottom: 15px;
+
+}
+
+
+
+/* Responsive Design for screens smaller than 768px (typical mobile) */
+
+@media (max-width: 1000px) {
+
+    .order-history-container {
+
+        padding: 15px; /* Further reduced padding for mobile */
+
+        width: 100%; /* Take full width on mobile */
+
+    }
+
+
+
+    .filters {
+
+        font-size: 15px; /* Further reduce filter font size on mobile */
+
+        gap: 10px; /* Further reduced filter gap on mobile */
+
+    }
+
+
+
+    .filter-item {
+
+        padding: 6px 10px; /* Further reduced button padding on mobile */
+
+        font-size: 13px; /* Even smaller font on buttons for mobile */
+
+    }
+
+
+
+    .order-card {
+
+        padding: 100px;
+
+        padding-bottom: 15px;
+
+        padding-top: 20px; /* Reduced padding for order card on mobile */
+
+        margin-top: 0px; /* Reduced margin for order card on mobile */
+
+        margin-bottom: 10px; /* Reduced margin for order card on mobile */
+
+    }
+
+
+
+    /* .order-header {
+
+        flex-direction: column; /* Stack order header elements on mobile */
+
+        /* align-items: flex-start; Align header elements to the start on mobile */
+
+        /* text-align: left; Left align text in header on mobile */
+
+        /* padding-bottom: 5px; Reduced padding-bottom in header on mobile */
+
+    /* } */
+
+
+
+    .order-header p {
+
+        font-size: 1em; /* Adjusted header paragraph font size on mobile */
+
+        margin-bottom: 5px; /* Added margin below header paragraphs on mobile */
+
+    }
+
+
+
+
+
+    .btn-buy {
+
+        font-size: 0.8rem; /* Even smaller button font on mobile */
+
+        padding: 6px 12px; /* Reduced button padding on mobile */
+
+        margin-top: 5px; /* Reduced button margin on mobile */
+
+        margin-bottom: 5px; /* Reduced button margin on mobile */
+
+    }
+
+
+
+    .total-amount {
+
+        font-size: 1rem; /* Adjusted total amount font size on mobile */
+
+        text-align: right; /* Align total amount to the left on mobile in stacked layout */
+
+        margin-top: 5px; /* Reduced margin-top for total amount on mobile */
+
+    }
+
+}
+
+@media (max-width: 800px) {
+
+    .order-card {
+
+        padding: 30px;
+
+        padding-bottom: 15px;
+
+        padding-top: 20px; /* Reduced padding for order card on mobile */
+
+        margin-bottom: 10px; /* Reduced margin for order card on mobile */
+
+    }
+
+}
+
+@media (max-width: 550px) {
+
+    .order-card {
+
+        padding-bottom: 15px;
+
+        padding-top: 20px; /* Reduced padding for order card on mobile */
+
+        margin-bottom: 10px; /* Reduced margin for order card on mobile */
+
+    }
+
+}
+
+@media (max-width: 450px) {
+
+    .order-header[_ngcontent-ng-c24944901] p[_ngcontent-ng-c24944901] {
+
+        font-size: 0.7rem;
+
+        margin-bottom: 5px;
+
+    }
+
+    .order-header[_ngcontent-ng-c24944901] {
+
+        display: flex;
+
+        /* justify-content: space-between; */
+
+        align-items: center;
+
+        flex-wrap: wrap;
+
+        gap: 18px;
+
+        height: auto;
+
+        margin-bottom: 10px;
+
+        padding-bottom: 10px;
+
+        margin-left: 21px;
+
+    }
+
+    .btn-buy[_ngcontent-ng-c24944901] {
+
+        font-size: 0.7rem;
+
+        padding: 4px 8px;
+
+        margin-top: 5px;
+
+        margin-bottom: 5px;
+
+        margin-right: 15px;
+
+    }
+
+   
+
+    .total-amount[_ngcontent-ng-c24944901] {
+
+        font-size: 0.7rem;
+
+        text-align: right;
+
+        margin-top: 5px;
+
+        margin-right: 10px;
+
+    }
+
+}
+
+import { Component, OnInit } from '@angular/core';
+
+import { OrderService } from '../../services/order.service';
+
+import { Order } from '../../models/order';
+
+
+
+@Component({
+
+  selector: 'app-order-list',
+
+  standalone: false,
+
+  templateUrl: './order-list.component.html',
+
+  styleUrl: './order-list.component.css'
+
+})
+
+export class OrderListComponent implements OnInit {
+
+  orders: Order[] = [];
+
+  filteredOrders: Order[] = [];
+
+  selectedFilter: string = 'all';
+
+  isEmptyOrders: boolean = false; // Flag for overall empty orders
+
+  isEmptyInProgressOrders: boolean = false;
+
+  isEmptyDeliveredOrders: boolean = false;
+
+  isEmptyCancelledOrders: boolean = false;
+
+
+
+  constructor(private orderService: OrderService) {}
+
+
+
+  ngOnInit(): void {
+
+    this.orderService.getOrders().subscribe(data => {
+
+      this.orders = data;
+
+      this.fetchOrders(); // Initialize filteredOrders with all orders
+
+    });
+
+  }
+
+
+
+  fetchOrders(): void {
+
+    this.orderService.getOrders().subscribe({ // Use observer argument
+
+        next: (orders: Order[]) => { // next callback
+
+            this.orders = orders;
+
+            console.log('Fetched Orders:', this.orders);
+
+            this.applyFilter();
+
+        },
+
+        error: (error) => { // error callback
+
+            console.error('Error fetching orders:', error);
+
+        }
+
+        // You can add a 'complete' callback here if you need to handleObservable completion
+
+        // complete: () => { console.log('Observable completed'); }
+
+    });
+
+}
+
+
+
+setFilter(filterType: string): void {
+
+  console.log('Filter set to:', filterType); // Log when filter is set
+
+  this.selectedFilter = filterType;
+
+  this.applyFilter();
+
+}
+
+
+
+applyFilter(): void {
+
+    if (this.selectedFilter === 'all') {
+
+        this.filteredOrders = [...this.orders]; // Show all orders
+
+    } else if (this.selectedFilter === 'inProgress') {
+
+        // Define what "summary" filter means for your orders, adapt logic as needed
+
+        this.filteredOrders = this.orders.filter(order => order.orderStatus === 'PENDING'); // Example - adjust status as needed
+
+    } else if (this.selectedFilter === 'Delivered') {
+
+        this.filteredOrders = this.orders.filter(order => order.orderStatus === 'DELIVERED');
+
+    } else if (this.selectedFilter === 'Cancelled') {
+
+        this.filteredOrders = this.orders.filter(order => order.orderStatus === 'CANCELLED');
+
+    } else {
+
+        this.filteredOrders = [...this.orders]; // Default to showing all if filter is unknown
+
+    }
+
+    console.log('Filtered Orders:', this.filteredOrders);
+
+    this.updateEmptyStateFlags();
+
+}
+
+updateEmptyStateFlags(): void {
+
+  this.isEmptyOrders = this.orders.length === 0;
+
+  this.isEmptyInProgressOrders = this.selectedFilter === 'inProgress' && this.filteredOrders.length === 0;
+
+  this.isEmptyDeliveredOrders = this.selectedFilter === 'Delivered' && this.filteredOrders.length === 0;
+
+  this.isEmptyCancelledOrders = this.selectedFilter === 'Cancelled' && this.filteredOrders.length === 0;
+
+}
+
+
+
+isAnyFilterEmpty(): boolean {
+
+  return this.isEmptyOrders || this.isEmptyInProgressOrders || this.isEmptyDeliveredOrders || this.isEmptyCancelledOrders;
+
+}
+
+
+
+getEmptyStateMessage(): string {
+
+  if (this.isEmptyOrders) {
+
+      return "You haven't placed any orders yet.";
+
+  } else if (this.isEmptyInProgressOrders) {
+
+      return "No orders in progress.";
+
+  } else if (this.isEmptyDeliveredOrders) {
+
+      return "No delivered orders found.";
+
+  } else if (this.isEmptyCancelledOrders) {
+
+      return "No cancelled orders found.";
+
+  }
+
+  return ""; // Should not reach here in normal cases, but for type safety
+
+}
+
+
+
+getEmptyStateIcon(): string {
+
+  if (this.isEmptyOrders) {
+
+      return "bi-box-seam"; // Bootstrap Icon name for empty box
+
+  } else if (this.isEmptyInProgressOrders || this.isEmptyDeliveredOrders || this.isEmptyCancelledOrders) {
+
+      return "bi-search-x"; // Bootstrap Icon name for search with x (no results)
+
+  }
+
+  return ""; // Default, should not be used if isAnyFilterEmpty is checked first
+
+}
+
+
+
+}
+
+import { Component, Input } from '@angular/core';
+
+import { OrderItem } from '../../models/order';
+
+@Component({
+
+  selector: 'app-order-item',
+
+  standalone: false,
+
+  templateUrl: './order-item.component.html',
+
+  styleUrl: './order-item.component.css'
+
+})
+
+export class OrderItemComponent {
+
+  @Input() item!: OrderItem;
+
+  @Input() orderStatus!:string;
+
+  @Input() deliveryDate!: string;
+
+
+
+  getStatusColor(): string {
+
+    switch (this.orderStatus.toLowerCase()) {
+
+      case 'delivered':
+
+        return 'green';
+
+      case 'cancelled':
+
+        return 'red';
+
+      default:
+
+        return 'blue';
+
+    }
+
+  }
+
+}
+
+
+
+<div class="order-item">
+
+    <img [src]="'https://m.media-amazon.com/images/I/711fYUFXhcL._SL1500_.jpg'" alt="{{ item.productName }}" class="product-image">
+
+   
+
+    <div class="item-details">
+
+      <h3>{{ item.productName }}</h3>
+
+      <p>Qty: {{ item.quantity }}</p>
+
+      <p class="price">Price: ${{ item.price }}</p>
+
+    </div>
+
+    <div class="status">
+
+      <p>Status</p>
+
+      <p [ngStyle]="{ 'color': getStatusColor() }">{{ orderStatus }}</p>
+
+    </div>
+
+    <div class="delivery">
+
+      <p>Delivery Date</p>
+
+      <p><strong>{{ deliveryDate }}</strong></p>
+
+    </div>
+
+  </div>
+
+/* src/app/components/order-item/order-item.component.css */
+
+.order-item {
+
+    display: flex;
+
+    align-items: center;
+
+    border-top: 1px solid #ddd;
+
+    padding: 10px;
+
+    gap: 40px;
+
+    position: relative; /* For potential absolute positioning */
+
+}
+
+
+
+.product-image {
+
+    width: 150px; /* Increased image size from 80px for larger view */
+
+    height: 100%; /* Increased image size from 80px for larger view */
+
+    object-fit: cover;
+
+    border-radius: 5px;
+
+}
+
+
+
+.item-details {
+
+    flex-grow: 1;
+
+}
+
+
+
+.item-details h3 {
+
+    font-size: 1.10rem; /* Adjusted product name font size */
+
+    margin-bottom: 5px;
+
+}
+
+.price{
+
+    font-weight: bold;
+
+}
+
+
+
+.item-details p {
+
+    font-size: 0.9rem; /* Adjusted other text in item details */
+
+    margin-bottom: 2px; /* Reduced margin for paragraphs in details */
+
+    margin-left: 20px;
+
+}
+
+
+
+
+
+.status, .delivery {
+
+    text-align: center; /* Center text in status and delivery blocks */
+
+}
+
+
+
+.delivery[_ngcontent-ng-c1259420439] strong[_ngcontent-ng-c1259420439] {
+
+    font-size: 0.9rem;
+
+}
+
+.status p,
+
+.delivery p {
+
+    font-size: 0.9rem; /* Adjusted status/delivery text size */
+
+    margin-bottom: 0.2rem;
+
+    margin-left: 95px;
+
+}
+
+
+
+.status strong, .delivery strong {
+
+    font-size: 0.9rem; /* Adjusted strong text in status/delivery */
+
+}
+
+
+
+@media (max-width: 950px) { /* Media query for screen less than 870px */
+
+    .order-item {
+
+        gap: 15px; /* Slightly reduced gap */
+
+        padding: 8px; /* Slightly reduced padding */
+
+    }
+
+
+
+    .product-image {
+
+        width: 150px; /* Medium size image for tablet/mid-size screens */
+
+        height: auto; /* Maintain aspect ratio */
+
+    }
+
+
+
+    .item-details h3 {
+
+        font-size: 1.2rem; /* Adjusted product name font size for medium screens */
+
+    }
+
+
+
+    .contanier{
+
+        display: none;
+
+    }
+
+
+
+    .item-details p {
+
+        font-size: 1rem; /* Adjusted item details text size for medium screens */
+
+        margin-left: 15px; /* Slightly reduced left margin */
+
+    }
+
+
+
+    .status p,
+
+    .delivery p {
+
+        font-size: 1rem; /* Adjusted status/delivery text size for medium screens */
+
+        margin-left: 40px; /* Reduced left margin for status/delivery */
+
+    }
+
+
+
+    .delivery[_ngcontent-ng-c1259420439] strong[_ngcontent-ng-c1259420439] {
+
+        font-size: 0.9rem; /* Slightly reduced strong font size for medium screens */
+
+    }
+
+}
+
+
+
+
+
+@media (max-width: 840px) { /* New media query for screen less than 655px */
+
+    .order-item {
+
+        flex-direction: row; /* Change to row to align image and details horizontally */
+
+        align-items: flex-start; /* Align items to the top */
+
+        gap: 85px; /* Reduced gap */
+
+        padding: 10px; /* Slightly reduced padding */
+
+    }
+
+
+
+    .product-image {
+
+        width: 100px; /* Reduced image width to match target image */
+
+        height: auto; /* Maintain aspect ratio */
+
+        margin-bottom: 0; /* Remove bottom margin */
+
+        margin-right: 15px; /* Add right margin to image for spacing from details */
+
+    }
+
+
+
+    .item-details {
+
+        width: auto; /* Change width to auto to shrink-wrap content */
+
+        flex-grow: 1; /* Allow item-details to take remaining space */
+
+    }
+
+
+
+    .item-qty-price-status-delivery {
+
+        display: flex;
+
+        flex-direction: column; /* Stack qty/price and status/delivery vertically */
+
+        flex-wrap: nowrap; /* Prevent wrapping within this column */
+
+        justify-content: flex-start; /* Align items to start */
+
+        width: auto; /* Change width to auto */
+
+        margin-top: 0; /* Remove top margin */
+
+    }
+
+
+
+    .item-qty-price {
+
+        display: flex;
+
+        gap: 10px; /* Reduced gap between qty and price */
+
+        margin-bottom: 0; /* Remove bottom margin */
+
+    }
+
+
+
+    .status-delivery {
+
+        display: flex;
+
+        gap: 10px; /* Reduced gap between status and delivery */
+
+        margin-top: 5px; /* Add a little top margin for spacing */
+
+    }
+
+
+
+    .status, .delivery {
+
+        text-align: left;
+
+        padding: 0; /* Remove padding from status and delivery */
+
+    }
+
+
+
+    .status-label, .delivery-label, /* Target status and delivery labels */
+
+    .item-detail-label { /* Target detail labels (By:, Size:, Qty:, Price:) */
+
+        font-size: 0.85rem; /* Slightly smaller font size for labels */
+
+        margin-right: 5px; /* Add right margin to labels for spacing from values */
+
+    }
+
+
+
+    .item-details h3 {
+
+        font-size: 1.1rem; /* Adjusted product name size */
+
+        margin-bottom: 2px; /* Reduced bottom margin */
+
+    }
+
+
+
+    .item-details p,
+
+    .item-qty-price span, /* Target qty and price values */
+
+    .status p,
+
+    .delivery p {
+
+        margin-left: 0; /* Reset left margins */
+
+        font-size: 0.9rem; /* Slightly reduced font size for values */
+
+        margin-bottom: 0; /* Remove bottom margin for values */
+
+    }
+
+}
+
+
+
+
+
+@media (max-width: 700px) { /* New media query for screen less than 655px */
+
+    .order-item {
+
+        flex-direction: row; /* Change to row to align image and details horizontally */
+
+        align-items: flex-start; /* Align items to the top */
+
+        gap: 35px; /* Reduced gap */
+
+        padding: 10px; /* Slightly reduced padding */
+
+    }
+
+
+
+    .product-image {
+
+        width: 100px; /* Reduced image width to match target image */
+
+        height: auto; /* Maintain aspect ratio */
+
+        margin-bottom: 0; /* Remove bottom margin */
+
+        margin-right: 15px; /* Add right margin to image for spacing from details */
+
+    }
+
+
+
+    .item-details {
+
+        width: auto; /* Change width to auto to shrink-wrap content */
+
+        flex-grow: 1; /* Allow item-details to take remaining space */
+
+    }
+
+
+
+    .item-qty-price-status-delivery {
+
+        display: flex;
+
+        flex-direction: column; /* Stack qty/price and status/delivery vertically */
+
+        flex-wrap: nowrap; /* Prevent wrapping within this column */
+
+        justify-content: flex-start; /* Align items to start */
+
+        width: auto; /* Change width to auto */
+
+        margin-top: 0; /* Remove top margin */
+
+    }
+
+
+
+    .item-qty-price {
+
+        display: flex;
+
+        gap: 10px; /* Reduced gap between qty and price */
+
+        margin-bottom: 0; /* Remove bottom margin */
+
+    }
+
+
+
+    .status-delivery {
+
+        display: flex;
+
+        gap: 10px; /* Reduced gap between status and delivery */
+
+        margin-top: 5px; /* Add a little top margin for spacing */
+
+    }
+
+
+
+    .status, .delivery {
+
+        text-align: left;
+
+        padding: 0; /* Remove padding from status and delivery */
+
+    }
+
+
+
+    .status-label, .delivery-label, /* Target status and delivery labels */
+
+    .item-detail-label { /* Target detail labels (By:, Size:, Qty:, Price:) */
+
+        font-size: 0.85rem; /* Slightly smaller font size for labels */
+
+        margin-right: 5px; /* Add right margin to labels for spacing from values */
+
+    }
+
+
+
+    .item-details h3 {
+
+        font-size: 1.1rem; /* Adjusted product name size */
+
+        margin-bottom: 2px; /* Reduced bottom margin */
+
+    }
+
+
+
+    .item-details p,
+
+    .item-qty-price span, /* Target qty and price values */
+
+    .status p,
+
+    .delivery p {
+
+        margin-left: 0; /* Reset left margins */
+
+        font-size: 0.9rem; /* Slightly reduced font size for values */
+
+        margin-bottom: 0; /* Remove bottom margin for values */
+
+    }
+
+}
+
+@media (max-width: 550px) { /* New media query for screen less than 655px */
+
+    .order-item {
+
+        flex-direction: row; /* Change to row to align image and details horizontally */
+
+        align-items: flex-start; /* Align items to the top */
+
+        gap: 15px; /* Reduced gap */
+
+        padding: 10px; /* Slightly reduced padding */
+
+    }
+
+
+
+    .product-image {
+
+        width: 100px; /* Reduced image width to match target image */
+
+        height: auto; /* Maintain aspect ratio */
+
+        margin-bottom: 0; /* Remove bottom margin */
+
+        margin-right: 15px; /* Add right margin to image for spacing from details */
+
+    }
+
+
+
+    .item-details {
+
+        width: auto; /* Change width to auto to shrink-wrap content */
+
+        flex-grow: 1; /* Allow item-details to take remaining space */
+
+    }
+
+
+
+    .item-qty-price-status-delivery {
+
+        display: flex;
+
+        flex-direction: column; /* Stack qty/price and status/delivery vertically */
+
+        flex-wrap: nowrap; /* Prevent wrapping within this column */
+
+        justify-content: flex-start; /* Align items to start */
+
+        width: auto; /* Change width to auto */
+
+        margin-top: 0; /* Remove top margin */
+
+    }
+
+
+
+    .item-qty-price {
+
+        display: flex;
+
+        gap: 10px; /* Reduced gap between qty and price */
+
+        margin-bottom: 0; /* Remove bottom margin */
+
+    }
+
+
+
+    .status-delivery {
+
+        display: flex;
+
+        gap: 10px; /* Reduced gap between status and delivery */
+
+        margin-top: 5px; /* Add a little top margin for spacing */
+
+    }
+
+
+
+    .status, .delivery {
+
+        text-align: left;
+
+        padding: 0; /* Remove padding from status and delivery */
+
+    }
+
+
+
+    .status-label, .delivery-label, /* Target status and delivery labels */
+
+    .item-detail-label { /* Target detail labels (By:, Size:, Qty:, Price:) */
+
+        font-size: 0.85rem; /* Slightly smaller font size for labels */
+
+        margin-right: 5px; /* Add right margin to labels for spacing from values */
+
+    }
+
+
+
+    .item-details h3 {
+
+        font-size: 1.1rem; /* Adjusted product name size */
+
+        margin-bottom: 2px; /* Reduced bottom margin */
+
+    }
+
+
+
+    .item-details p,
+
+    .item-qty-price span, /* Target qty and price values */
+
+    .status p,
+
+    .delivery p {
+
+        margin-left: 0; /* Reset left margins */
+
+        font-size: 0.9rem; /* Slightly reduced font size for values */
+
+        margin-bottom: 0; /* Remove bottom margin for values */
+
+    }
+
+}
+
+@media (max-width: 450px) { /* New media query for screen less than 655px */
+
+    .order-item {
+
+        flex-direction: row; /* Change to row to align image and details horizontally */
+
+        align-items: flex-start; /* Align items to the top */
+
+        gap: 5px; /* Reduced gap */
+
+        padding: 10px; /* Slightly reduced padding */
+
+    }
+
+
+
+    .product-image {
+
+        width: 70px; /* Reduced image width to match target image */
+
+        height: auto; /* Maintain aspect ratio */
+
+        margin-bottom: 0; /* Remove bottom margin */
+
+        margin-right: 5px; /* Add right margin to image for spacing from details */
+
+    }
+
+
+
+    .item-details {
+
+        width: auto; /* Change width to auto to shrink-wrap content */
+
+        flex-grow: 1; /* Allow item-details to take remaining space */
+
+    }
+
+
+
+    .item-qty-price-status-delivery {
+
+        display: flex;
+
+        flex-direction: column; /* Stack qty/price and status/delivery vertically */
+
+        flex-wrap: nowrap; /* Prevent wrapping within this column */
+
+        justify-content: flex-start; /* Align items to start */
+
+        width: auto; /* Change width to auto */
+
+        margin-top: 0; /* Remove top margin */
+
+    }
+
+
+
+    .item-qty-price {
+
+        display: flex;
+
+        gap: 10px; /* Reduced gap between qty and price */
+
+        margin-bottom: 0; /* Remove bottom margin */
+
+    }
+
+
+
+    .status-delivery {
+
+        display: flex;
+
+        gap: 10px; /* Reduced gap between status and delivery */
+
+        margin-top: 5px; /* Add a little top margin for spacing */
+
+    }
+
+
+
+    .status, .delivery {
+
+        text-align: left;
+
+        padding: 0; /* Remove padding from status and delivery */
+
+    }
+
+
+
+    .status-label, .delivery-label, /* Target status and delivery labels */
+
+    .item-detail-label { /* Target detail labels (By:, Size:, Qty:, Price:) */
+
+        font-size: 0.85rem; /* Slightly smaller font size for labels */
+
+        margin-right: 5px; /* Add right margin to labels for spacing from values */
+
+    }
+
+
+
+    .item-details h3 {
+
+        font-size: 0.9rem; /* Adjusted product name size */
+
+        margin-bottom: 2px; /* Reduced bottom margin */
+
+    }
+
+
+
+    .item-details p,
+
+    .item-qty-price span, /* Target qty and price values */
+
+    .status p,
+
+    .delivery p {
+
+        margin-left: 0; /* Reset left margins */
+
+        font-size: 0.7rem; /* Slightly reduced font size for values */
+
+        margin-bottom: 0; /* Remove bottom margin for values */
+
+    }
+
+    .delivery[_ngcontent-ng-c1259420439][_ngcontent-ng-c1259420439] strong[_ngcontent-ng-c1259420439][_ngcontent-ng-c1259420439] {
+
+        font-size: 0.7rem;
+
+    }
+
+    .status[_ngcontent-ng-c1259420439] p[_ngcontent-ng-c1259420439], .delivery[_ngcontent-ng-c1259420439] p[_ngcontent-ng-c1259420439] {
+
+        margin-left: 19px;
+
+        font-size: 0.7rem;
+
+        margin-bottom: 0;
+
+       
+
+    }
+
+}
+
+this is my code and when i click on view order button then it should redirect me to order details page and give me order detail page and i'm clearly mentioning that the application should be no-standalone application and when order status changes the status bar also should change and remove 'Track
+
+shipment', 'payment method' and 'ordered from' but there should be two columns where first column should contain ordered date and shipping address and in second column it should contain order number and billing details, billing details should contain shipping fee, discount and totalprice
+
+along with product image product name order item number product price and quantity should be displayed and it should be displayed how it is showed in image and when ordered is shipped it should be blue until shipped and shipped to delivered should be in grey or if the status is ordered then status bar's correct symbol only should be in blue and the rest of status bar should be in grey color and when it is delivered the color should be in green and when order is cancelled the status bar should contain ordered delivered and cancelled as status and should be in red color and make the page responsive and build the components as i'm using angular version 16 don't display static data fetch data from backend
+
+
+
+public class ProductDTO {
+
+    private Integer productId;
+
+    private String name;
+
+    private double newPrice;
+
+    private Double discount;
+
+    private String image1;
+
+    private String description;
+
+    private double highlightShippingFee;
+
+}
+
+public class OrderRequestDTO {
+
+    private Integer userId;
+
+    private List<OrderItemForOrderDto> orderItems; // List of order items
+
+    private Double orderTotalPrice; // Total price of the order
+
+}
+
+public class OrderItemForOrderDto {
+
+
+
+    private Integer productId;
+
+    private int quantity;
+
+    private Double totalPrice; // Total price for this item (quantity * price)
+
+    private String productName; // Include product name
+
+    private Double productPrice; // Include product price
+
+}
+
+public class OrderItemDTO {
+
+    private Integer orderItemId;
+
+    private Integer productId;
+
+    private String productName;
+
+    private Integer quantity;
+
+    private Double price;
+
+    private Double discount;
+
+    private String image;
+
+    @JsonIgnore
+
+    private Timestamp createdAt;
+
+    private double highlightShippingFee;
+
+}
+
+public class OrderHistoryDTO {
+
+    private Integer orderHistoryId;
+
+    private Integer orderId;
+
+    private Integer userId;
+
+    private String orderStatus;
+
+}
+
+public class OrderDTO {
+
+    private Integer orderId;
+
+    private Integer userId;
+
+    private Double totalAmount;
+
+    private String orderStatus;
+
+    private Integer deliveryAddressId;
+
+    private AddressDTO deliveryAddress;
+
+    private LocalDate deliveryDate;
+
+    private Timestamp createdAt;
+
+    private List<OrderItemDTO> orderItems; // List of order items
+
+    private List<OrderHistoryDTO> orderHistory; // List of order history
+
+}
+
+public class CartItemDTO {
+
+    private Integer cartItemId;
+
+    private Integer userId;
+
+    private Integer productId;
+
+    private Integer quantity;
+
+    private String productName;
+
+    private Double productPrice;
+
+    private Double totalPrice;
+
+}
+
+public class CartDTO {
+
+    private Integer cartId;
+
+    private int userId;
+
+    private int productId;
+
+    private int quantity;
+
+    private List<CartItemDTO> cartItems;
+
+}
+
+public class AddressDTO {
+
+    private int addressId;
+
+    private String street;
+
+    private String city;
+
+    private String state;
+
+    private String postalCode;
+
+    private String country;
+
+}
+
+
+
+package com.genckart.service.Impl;
+
+import com.genckart.clients.CartClient;
+import com.genckart.clients.ProductClient;
+import com.genckart.clients.UserClient;
+import com.genckart.dto.*;
+import com.genckart.entity.*;
+import com.genckart.exception.OrderNotFoundException;
+import com.genckart.repository.OrderHistoryRepository;
+import com.genckart.repository.OrderItemRepository;
+import com.genckart.repository.OrderRepository;
+import com.genckart.service.OrderService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class OrderServiceImpl implements OrderService {
+
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderHistoryRepository orderHistoryRepository;
+    private final UserClient userClient;
+    private final ProductClient productClient;
+    private final CartClient cartClient;
+
+    @Override
+    public OrderDTO placeOrder(OrderRequestDTO orderRequestDTO) {
+        // 1. Create Order Entity
+        Order order = new Order();
+        order.setUserId(orderRequestDTO.getUserId());
+        order.setTotalAmount(orderRequestDTO.getOrderTotalPrice());
+        order.setOrderStatus("YET TO DELIVER"); // Initial status
+        ResponseEntity<AddressDTO> addressResponse = userClient.getAddressById(order.getUserId());
+        AddressDTO userAddress=addressResponse.getBody();
+        order.setDeliveryAddressId(userAddress.getAddressId());
+        order.setDeliveryDate(LocalDate.now().plusDays(7)); // Set delivery date (7 days from now)
+        order = orderRepository.save(order); // Save order to get ID
+
+        // 2. Create Order Items (Use the saved 'order' - it's now effectively final)
+        // ... set order properties ...// Save order to get ID
+        final Order savedOrder = order; // Make a final copy
+
+        List<OrderItem> orderItems = orderRequestDTO.getOrderItems().stream()
+                .map(orderItemDTO -> {
+                    OrderItem orderItem = new OrderItem();
+                    orderItem.setOrder(savedOrder); // Now this is OK!
+                    orderItem.setProductId(orderItemDTO.getProductId());
+                    orderItem.setQuantity(orderItemDTO.getQuantity());
+                    return orderItem;
+                }).collect(Collectors.toList());
+        orderItemRepository.saveAll(orderItems);
+
+        // 3. Create Order History (Optional, but recommended)
+        OrderHistory orderHistory = new OrderHistory();
+        orderHistory.setOrder(order);
+        orderHistory.setUserId(orderRequestDTO.getUserId());
+        orderHistory.setOrderStatus("YET TO DELIVER");
+        orderHistoryRepository.save(orderHistory);
+
+        // 4. Convert and return OrderDTO
+        return convertToDTO(order);
+    }
+
+    public OrderDTO getOrderDetails(Integer orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+        List<OrderHistory> orderHistory = orderHistoryRepository.findByOrderId(orderId);
+
+        OrderDTO orderDTO = convertToDTO(order);
+        orderDTO.setOrderItems(orderItems.stream()
+                .map(this::convertToOrderItemDTO)
+                .collect(Collectors.toList()));
+        orderDTO.setOrderHistory(orderHistory.stream()
+                .map(this::convertToOrderHistoryDTO)
+                .collect(Collectors.toList()));
+
+        return orderDTO;
+    }
+
+    public List<OrderDTO> getOrderHistory(Integer userId) {
+        List<Order> orders = orderRepository.findByUserId(userId);
+        if (orders.isEmpty()) {
+            throw new OrderNotFoundException("No orders found for user ID: " + userId);
+        }
+        return orders.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteOrder(Integer orderId) {
+        if (!orderRepository.existsById(orderId)) {
+            throw new OrderNotFoundException("Order not found with ID: " + orderId);
+        }
+        orderItemRepository.deleteByOrder_OrderId(orderId);
+        orderHistoryRepository.deleteByOrder_OrderId(orderId);
+        orderRepository.deleteById(orderId);
+    }
+
+    private OrderDTO convertToDTO(Order order) {
+        OrderDTO orderDTO = new OrderDTO();
+        orderDTO.setOrderId(order.getOrderId());
+        orderDTO.setUserId(order.getUserId());
+        orderDTO.setTotalAmount(order.getTotalAmount());
+        orderDTO.setOrderStatus(order.getOrderStatus());
+        orderDTO.setDeliveryAddressId(order.getDeliveryAddressId());
+        ResponseEntity<AddressDTO> addressResponse = userClient.getAddressById(orderDTO.getUserId());
+        AddressDTO userAddress=addressResponse.getBody();
+        orderDTO.setDeliveryAddress(userAddress);
+        orderDTO.setDeliveryDate(order.getDeliveryDate());
+        orderDTO.setCreatedAt(order.getCreatedAt());
+
+        orderDTO.setOrderItems(orderItemRepository.findByOrderId(order.getOrderId())
+                .stream().map(this::convertToOrderItemDTO).collect(Collectors.toList()));
+
+        orderDTO.setOrderHistory(orderHistoryRepository.findByOrderId(order.getOrderId())
+                .stream().map(this::convertToOrderHistoryDTO).collect(Collectors.toList()));
+
+        return orderDTO;
+    }
+
+    private OrderItemDTO convertToOrderItemDTO(OrderItem orderItem) {
+        OrderItemDTO orderItemDTO = new OrderItemDTO();
+        orderItemDTO.setOrderItemId(orderItem.getOrderItemId());
+        orderItemDTO.setProductId(orderItem.getProductId());
+        orderItemDTO.setQuantity(orderItem.getQuantity());
+
+        // Extract ProductDTO from ResponseEntity
+        ResponseEntity<ProductDTO> productResponse = productClient.getProductById(orderItem.getProductId());
+        if (productResponse.hasBody()) {
+            ProductDTO product = productResponse.getBody();
+            orderItemDTO.setProductName(product.getName());
+            orderItemDTO.setDiscount(product.getDiscount());
+            orderItemDTO.setPrice(product.getNewPrice());
+            orderItemDTO.setImage(product.getImage1());
+            orderItemDTO.setHighlightShippingFee(product.getHighlightShippingFee());
+        } else {
+            orderItemDTO.setProductName("Unknown Product");
+            orderItemDTO.setPrice(0.0);
+            orderItemDTO.setDiscount(0.0);
+        }
+        return orderItemDTO;
+    }
+
+    private OrderHistoryDTO convertToOrderHistoryDTO(OrderHistory orderHistory) {
+        OrderHistoryDTO orderHistoryDTO = new OrderHistoryDTO();
+        orderHistoryDTO.setOrderHistoryId(orderHistory.getOrderHistoryId());
+        orderHistoryDTO.setOrderId(orderHistory.getOrder().getOrderId());
+        orderHistoryDTO.setUserId(orderHistory.getUserId());
+        orderHistoryDTO.setOrderStatus(orderHistory.getOrderStatus());
+        return orderHistoryDTO;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="order-history-container">
   <h2>Order History</h2>
   <div class="filters">
     <span>All Order</span>
