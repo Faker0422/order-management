@@ -1,3 +1,399 @@
+import { Component, OnInit } from '@angular/core';
+import { OrderService } from '../../services/order.service';
+import { Order } from '../../models/order';
+
+@Component({
+  selector: 'app-order-list',
+  standalone: false,
+  templateUrl: './order-list.component.html',
+  styleUrl: './order-list.component.css'
+})
+export class OrderListComponent implements OnInit {
+  orders: Order[] = [];
+  filteredOrders: Order[] = [];
+  selectedFilter: string = 'all';
+  isEmptyOrders: boolean = false; // Flag for overall empty orders
+  isEmptyInProgressOrders: boolean = false;
+  isEmptyDeliveredOrders: boolean = false;
+  isEmptyCancelledOrders: boolean = false;
+
+  constructor(private orderService: OrderService) {}
+
+  ngOnInit(): void {
+    this.orderService.getOrders().subscribe(data => {
+      this.orders = data;
+      this.fetchOrders(); // Initialize filteredOrders with all orders
+    });
+  }
+
+  fetchOrders(): void {
+    this.orderService.getOrders().subscribe({ // Use observer argument
+        next: (orders: Order[]) => { // next callback
+            this.orders = orders;
+            console.log('Fetched Orders:', this.orders);
+            this.applyFilter();
+        },
+        error: (error) => { // error callback
+            console.error('Error fetching orders:', error);
+        }
+        // You can add a 'complete' callback here if you need to handleObservable completion
+        // complete: () => { console.log('Observable completed'); }
+    });
+}
+
+setFilter(filterType: string): void {
+  console.log('Filter set to:', filterType); // Log when filter is set
+  this.selectedFilter = filterType;
+  this.applyFilter();
+}
+
+applyFilter(): void {
+    if (this.selectedFilter === 'all') {
+        this.filteredOrders = [...this.orders]; // Show all orders
+    } else if (this.selectedFilter === 'inProgress') {
+        // Define what "summary" filter means for your orders, adapt logic as needed
+        this.filteredOrders = this.orders.filter(order => order.orderStatus === 'PENDING'); // Example - adjust status as needed
+    } else if (this.selectedFilter === 'Delivered') {
+        this.filteredOrders = this.orders.filter(order => order.orderStatus === 'DELIVERED');
+    } else if (this.selectedFilter === 'Cancelled') {
+        this.filteredOrders = this.orders.filter(order => order.orderStatus === 'CANCELLED');
+    } else {
+        this.filteredOrders = [...this.orders]; // Default to showing all if filter is unknown
+    }
+    console.log('Filtered Orders:', this.filteredOrders);
+    this.updateEmptyStateFlags();
+}
+updateEmptyStateFlags(): void {
+  this.isEmptyOrders = this.orders.length === 0;
+  this.isEmptyInProgressOrders = this.selectedFilter === 'inProgress' && this.filteredOrders.length === 0;
+  this.isEmptyDeliveredOrders = this.selectedFilter === 'Delivered' && this.filteredOrders.length === 0;
+  this.isEmptyCancelledOrders = this.selectedFilter === 'Cancelled' && this.filteredOrders.length === 0;
+}
+
+isAnyFilterEmpty(): boolean {
+  return this.isEmptyOrders || this.isEmptyInProgressOrders || this.isEmptyDeliveredOrders || this.isEmptyCancelledOrders;
+}
+
+getEmptyStateMessage(): string {
+  if (this.isEmptyOrders) {
+      return "You haven't placed any orders yet.";
+  } else if (this.isEmptyInProgressOrders) {
+      return "No orders in progress.";
+  } else if (this.isEmptyDeliveredOrders) {
+      return "No delivered orders found.";
+  } else if (this.isEmptyCancelledOrders) {
+      return "No cancelled orders found.";
+  }
+  return ""; // Should not reach here in normal cases, but for type safety
+}
+
+getEmptyStateIcon(): string {
+  if (this.isEmptyOrders) {
+      return "bi-box-seam"; // Bootstrap Icon name for empty box
+  } else if (this.isEmptyInProgressOrders || this.isEmptyDeliveredOrders || this.isEmptyCancelledOrders) {
+      return "bi-search-x"; // Bootstrap Icon name for search with x (no results)
+  }
+  return ""; // Default, should not be used if isAnyFilterEmpty is checked first
+}
+
+}
+
+
+<div class="order-history-container">
+    <h2>Order History</h2>
+    <div class="filters">
+        <button
+            class="filter-item"
+            [class.active]="selectedFilter === 'all'"
+            (click)="setFilter('all')"
+        >All Order</button>
+        <button
+            class="filter-item"
+            [class.active]="selectedFilter === 'inProgress'"
+            (click)="setFilter('inProgress')"
+        >In Progress</button>
+        <button
+            class="filter-item"
+            [class.active]="selectedFilter === 'Delivered'"
+            (click)="setFilter('Delivered')"
+        >Delivered</button>
+        <button
+            class="filter-item"
+            [class.active]="selectedFilter === 'Cancelled'"
+            (click)="setFilter('Cancelled')"
+        >Cancelled</button>
+    </div>
+    <div *ngIf="!isAnyFilterEmpty(); else emptyStateTemplate">
+    <div *ngFor="let order of filteredOrders" class="order-card">
+      <div class="order-header">
+        <p><strong>Order: #{{ order.orderId }}</strong></p>
+        <p>Order Date: {{ order.createdAt | date:'yyyy-MM-dd' }}</p>
+        <button class="btn-buy">View Order</button>
+      </div>
+      
+      <div *ngFor="let item of order.orderItems">
+        <app-order-item [item]="item" [orderStatus]="order.orderStatus" [deliveryDate]="order.deliveryDate"></app-order-item>
+      </div>
+  
+      <p class="total-amount">Total: ${{ order.totalAmount }}</p>
+    </div>
+  </div>
+  <ng-template #emptyStateTemplate>
+    <div class="empty-order-state">
+        <i class="bi" [class]="getEmptyStateIcon()" style="font-size: 3rem;"></i> <br> <br>
+        <p class="empty-order-message">{{ getEmptyStateMessage() }}</p>
+        <p class="empty-order-message">You can browse our products and place an order.</p>
+        </div>
+</ng-template>
+
+</div>
+
+import { Component, Input } from '@angular/core';
+import { OrderItem } from '../../models/order';
+@Component({
+  selector: 'app-order-item',
+  standalone: false,
+  templateUrl: './order-item.component.html',
+  styleUrl: './order-item.component.css'
+})
+export class OrderItemComponent {
+  @Input() item!: OrderItem;
+  @Input() orderStatus!:string;
+  @Input() deliveryDate!: string;
+
+  getStatusColor(): string {
+    switch (this.orderStatus.toLowerCase()) {
+      case 'delivered':
+        return 'green';
+      case 'cancelled':
+        return 'red';
+      default:
+        return 'blue';
+    }
+  }
+}
+
+<div class="order-item">
+    <img [src]="'https://m.media-amazon.com/images/I/711fYUFXhcL._SL1500_.jpg'" alt="{{ item.productName }}" class="product-image">
+    
+    <div class="item-details">
+      <h3>{{ item.productName }}</h3>
+      <p>Qty: {{ item.quantity }}</p>
+      <p class="price">Price: ${{ item.price }}</p>
+    </div>
+    <div class="status">
+      <p>Status</p>
+      <p [ngStyle]="{ 'color': getStatusColor() }">{{ orderStatus }}</p>
+    </div>
+    <div class="delivery">
+      <p>Delivery Date</p>
+      <p><strong>{{ deliveryDate }}</strong></p>
+    </div>
+  </div>
+
+this is my code and when i click on view order button then it should redirect me to order details page and give me order detail page and i'm clearly mentioning that the application should be no-standalone application and when order status changes the status bar also should change and remove 'Track
+
+shipment', 'payment method' and 'ordered from' but there should be two columns where first column should contain ordered date and shipping address and in second column it should contain order number and billing details, billing details should contain shipping fee, discount and totalprice
+
+along with product image product name order item number product price and quantity should be displayed and it should be displayed how it is showed in image and when ordered is shipped it should be blue until shipped and shipped to delivered should be in grey or if the status is ordered then status bar's correct symbol only should be in blue and the rest of status bar should be in grey color and when it is delivered the color should be in green and when order is cancelled the status bar should contain ordered delivered and cancelled as status and should be in red color and make the page responsive and build the components as i'm using angular version 16 don't display static data fetch data from backend
+
+
+
+public class ProductDTO {
+
+    private Integer productId;
+
+    private String name;
+
+    private double newPrice;
+
+    private Double discount;
+
+    private String image1;
+
+    private String description;
+
+    private double highlightShippingFee;
+
+}
+
+public class OrderRequestDTO {
+
+    private Integer userId;
+
+    private List<OrderItemForOrderDto> orderItems; // List of order items
+
+    private Double orderTotalPrice; // Total price of the order
+
+}
+
+public class OrderItemForOrderDto {
+
+
+
+    private Integer productId;
+
+    private int quantity;
+
+    private Double totalPrice; // Total price for this item (quantity * price)
+
+    private String productName; // Include product name
+
+    private Double productPrice; // Include product price
+
+}
+
+public class OrderItemDTO {
+
+    private Integer orderItemId;
+
+    private Integer productId;
+
+    private String productName;
+
+    private Integer quantity;
+
+    private Double price;
+
+    private Double discount;
+
+    private String image;
+
+    @JsonIgnore
+
+    private Timestamp createdAt;
+
+    private double highlightShippingFee;
+
+}
+
+public class OrderHistoryDTO {
+
+    private Integer orderHistoryId;
+
+    private Integer orderId;
+
+    private Integer userId;
+
+    private String orderStatus;
+
+}
+
+public class OrderDTO {
+
+    private Integer orderId;
+
+    private Integer userId;
+
+    private Double totalAmount;
+
+    private String orderStatus;
+
+    private Integer deliveryAddressId;
+
+    private AddressDTO deliveryAddress;
+
+    private LocalDate deliveryDate;
+
+    private Timestamp createdAt;
+
+    private List<OrderItemDTO> orderItems; // List of order items
+
+    private List<OrderHistoryDTO> orderHistory; // List of order history
+
+}
+
+public class CartItemDTO {
+
+    private Integer cartItemId;
+
+    private Integer userId;
+
+    private Integer productId;
+
+    private Integer quantity;
+
+    private String productName;
+
+    private Double productPrice;
+
+    private Double totalPrice;
+
+}
+
+public class CartDTO {
+
+    private Integer cartId;
+
+    private int userId;
+
+    private int productId;
+
+    private int quantity;
+
+    private List<CartItemDTO> cartItems;
+
+}
+
+public class AddressDTO {
+
+    private int addressId;
+
+    private String street;
+
+    private String city;
+
+    private String state;
+
+    private String postalCode;
+
+    private String country;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <div class="order-history-container">
 
     <h2>Order History</h2>
@@ -1537,166 +1933,6 @@ export class OrderItemComponent {
        
 
     }
-
-}
-
-this is my code and when i click on view order button then it should redirect me to order details page and give me order detail page and i'm clearly mentioning that the application should be no-standalone application and when order status changes the status bar also should change and remove 'Track
-
-shipment', 'payment method' and 'ordered from' but there should be two columns where first column should contain ordered date and shipping address and in second column it should contain order number and billing details, billing details should contain shipping fee, discount and totalprice
-
-along with product image product name order item number product price and quantity should be displayed and it should be displayed how it is showed in image and when ordered is shipped it should be blue until shipped and shipped to delivered should be in grey or if the status is ordered then status bar's correct symbol only should be in blue and the rest of status bar should be in grey color and when it is delivered the color should be in green and when order is cancelled the status bar should contain ordered delivered and cancelled as status and should be in red color and make the page responsive and build the components as i'm using angular version 16 don't display static data fetch data from backend
-
-
-
-public class ProductDTO {
-
-    private Integer productId;
-
-    private String name;
-
-    private double newPrice;
-
-    private Double discount;
-
-    private String image1;
-
-    private String description;
-
-    private double highlightShippingFee;
-
-}
-
-public class OrderRequestDTO {
-
-    private Integer userId;
-
-    private List<OrderItemForOrderDto> orderItems; // List of order items
-
-    private Double orderTotalPrice; // Total price of the order
-
-}
-
-public class OrderItemForOrderDto {
-
-
-
-    private Integer productId;
-
-    private int quantity;
-
-    private Double totalPrice; // Total price for this item (quantity * price)
-
-    private String productName; // Include product name
-
-    private Double productPrice; // Include product price
-
-}
-
-public class OrderItemDTO {
-
-    private Integer orderItemId;
-
-    private Integer productId;
-
-    private String productName;
-
-    private Integer quantity;
-
-    private Double price;
-
-    private Double discount;
-
-    private String image;
-
-    @JsonIgnore
-
-    private Timestamp createdAt;
-
-    private double highlightShippingFee;
-
-}
-
-public class OrderHistoryDTO {
-
-    private Integer orderHistoryId;
-
-    private Integer orderId;
-
-    private Integer userId;
-
-    private String orderStatus;
-
-}
-
-public class OrderDTO {
-
-    private Integer orderId;
-
-    private Integer userId;
-
-    private Double totalAmount;
-
-    private String orderStatus;
-
-    private Integer deliveryAddressId;
-
-    private AddressDTO deliveryAddress;
-
-    private LocalDate deliveryDate;
-
-    private Timestamp createdAt;
-
-    private List<OrderItemDTO> orderItems; // List of order items
-
-    private List<OrderHistoryDTO> orderHistory; // List of order history
-
-}
-
-public class CartItemDTO {
-
-    private Integer cartItemId;
-
-    private Integer userId;
-
-    private Integer productId;
-
-    private Integer quantity;
-
-    private String productName;
-
-    private Double productPrice;
-
-    private Double totalPrice;
-
-}
-
-public class CartDTO {
-
-    private Integer cartId;
-
-    private int userId;
-
-    private int productId;
-
-    private int quantity;
-
-    private List<CartItemDTO> cartItems;
-
-}
-
-public class AddressDTO {
-
-    private int addressId;
-
-    private String street;
-
-    private String city;
-
-    private String state;
-
-    private String postalCode;
-
-    private String country;
 
 }
 
